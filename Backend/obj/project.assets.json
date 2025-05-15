@@ -4284,11 +4284,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\DoAnTotNghiep\\Backend\\Backend\\DoAnTotNghiep.csproj",
+      "projectUniqueName": "E:\\DoAnTotNghiep\\SourceCode\\Backend\\DoAnTotNghiep.csproj",
       "projectName": "DoAnTotNghiep",
-      "projectPath": "E:\\DoAnTotNghiep\\Backend\\Backend\\DoAnTotNghiep.csproj",
+      "projectPath": "E:\\DoAnTotNghiep\\SourceCode\\Backend\\DoAnTotNghiep.csproj",
       "packagesPath": "C:\\Users\\FPT\\.nuget\\packages\\",
-      "outputPath": "E:\\DoAnTotNghiep\\Backend\\Backend\\obj\\",
+      "outputPath": "E:\\DoAnTotNghiep\\SourceCode\\Backend\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\FPT\\AppData\\Roaming\\NuGet\\NuGet.Config"
