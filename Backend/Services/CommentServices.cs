@@ -29,9 +29,9 @@ namespace DoAnTotNghiep.Services
             return await _commentRepository.GetCommentByMovie(slugMovie);
         }
 
-        public async Task<bool> UpdateComment(CommentUpdateDTOs commentDTOs)
+        public async Task<bool> UpdateComment(string username, CommentUpdateDTOs commentDTOs)
         {
-            return await _commentRepository.UpdateComment(commentDTOs);
+            return await _commentRepository.UpdateComment(username,commentDTOs);
         }
     }
 }

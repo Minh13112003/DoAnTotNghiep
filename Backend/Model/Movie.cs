@@ -21,10 +21,14 @@
         public bool Block {  get; set; } = false;
         public string NameDirector {  get; set; } = string.Empty;
         public bool IsVip { get; set; } = false;
-        public List<SubCategory>? SubCategories { get;  }
+        public decimal Point {  get; set; }
+        public virtual List<SubCategory>? SubCategories { get;  }
         public virtual List<SubActor>? SubActors { get; set; }
         public virtual ICollection<Comment>? Comments { get; set; }
         public virtual ICollection<Report>? Reports { get; set; }
-        public List<LinkMovie>? LinkMovies { get; set; }
+        public virtual ICollection<LinkMovie>? LinkMovies { get; set; }
+        public virtual ICollection<History>? History { get; set; }
+        public virtual ICollection<MovieRating>? MovieRating { get; set; }
+        
     }
 }

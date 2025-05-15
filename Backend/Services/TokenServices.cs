@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace DoAnTotNghiep.Services
@@ -45,6 +46,14 @@ namespace DoAnTotNghiep.Services
             var tokenHandle = new JwtSecurityTokenHandler();
             var token = tokenHandle.CreateToken(tokenDescriptions);
             return tokenHandle.WriteToken(token);
+        }
+
+        public string GenerateRefreshToken()
+        {
+            var randomBytes = new byte[64];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomBytes);
+            return Convert.ToBase64String(randomBytes);
         }
     }
 }

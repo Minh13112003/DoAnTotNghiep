@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using DoAnTotNghiep.Helper.SlugifyHelper;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
+using DoAnTotNghiep.Model;
 
 namespace DoAnTotNghiep.Controllers
 {
@@ -14,12 +17,15 @@ namespace DoAnTotNghiep.Controllers
         private readonly IMovieServices _services;
         private readonly ITokenServices _tokenServices;
         private readonly ISubCategoryServices _subCategoryServices;
+        private readonly UserManager<AppUser> _userManager;
+       
 
-        public MovieController(IMovieServices services, ITokenServices tokenServices, ISubCategoryServices subCategoryServices)
+        public MovieController(IMovieServices services, ITokenServices tokenServices, ISubCategoryServices subCategoryServices,UserManager<AppUser> userManager)
         {
             _services = services;
             _tokenServices = tokenServices;
             _subCategoryServices = subCategoryServices;
+            _userManager = userManager;
         }
 
         [Authorize(Roles = "Admin")]
@@ -58,7 +64,7 @@ namespace DoAnTotNghiep.Controllers
             }
         }
         [Authorize(Roles = "Admin")]
-        [HttpPost("update")]
+        [HttpPut("update")]
         public async Task<IActionResult> UpdateMovie([FromBody] MovieToUpdateDTOs movieDTOs)
         {
             try
@@ -66,7 +72,7 @@ namespace DoAnTotNghiep.Controllers
                 if (!ModelState.IsValid) return BadRequest(ModelState);
                 var Movie = await _subCategoryServices.UpdateMovie(movieDTOs);
 
-                if (Movie != false) return Ok(new { message = $"Sửa phim có thành công" });
+                if (Movie != false) return Ok(new { message = "Sửa phim thành công" });
                 else return Unauthorized(new { message = "Sửa thất bại" });
             }catch(Exception ex)
             {
@@ -123,6 +129,23 @@ namespace DoAnTotNghiep.Controllers
             }
 
         }
+        [HttpGet("GetMovieById/{id}")]
+        public async Task<IActionResult> GetMovieById(string id)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(id)) 
+                {
+                    var movie = await _subCategoryServices.GetMovieById(id);
+                    if (movie == null) return NotFound(new {message = "Không tìm thấy phim" });
+                    return Ok(movie);
+                }
+                return BadRequest(new { message = "Đã có lỗi xảy ra" });
+            }catch(Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
         
         [HttpGet("GetMovieBySlugType/{slugtype}")]
         public async Task<IActionResult> GetMovieBySlugType(string slugtype)
@@ -151,7 +174,8 @@ namespace DoAnTotNghiep.Controllers
             try
             {
                 if (!ModelState.IsValid) return BadRequest(ModelState);
-                var movie = await _subCategoryServices.GetAllMovie();
+                var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                var movie = await _subCategoryServices.GetAllMovie(role!);
                 if (movie == null) return NotFound(new { message = "Không tìm thấy phim" });
                 return Ok(movie);
 
@@ -170,7 +194,8 @@ namespace DoAnTotNghiep.Controllers
 
                 if (!Keyword.IsNullOrEmpty())
                 {
-                    var MovieToSearch = await _subCategoryServices.SearchMovie(Keyword);
+                    var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                    var MovieToSearch = await _subCategoryServices.SearchMovie(Keyword, role!);
                     if (MovieToSearch != null)
                     {
                         return Ok(MovieToSearch);
@@ -231,6 +256,131 @@ namespace DoAnTotNghiep.Controllers
                 if (movie != null) return Ok(movie);
                 return BadRequest(new { message = "Không tìm thấy phim" });
             }catch(Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+        [Authorize]
+        [HttpPost("ToggleFavoriteMovie/{slugtitle}")]
+        public async Task<IActionResult> ToggleFavoriteMovie(string slugtitle)
+        {
+            try
+            {
+                var userName = User.Identity?.Name;
+                if (string.IsNullOrEmpty(userName)) return Unauthorized(new { message = "Không xác định được người dùng." });
+
+                var user = await _userManager.FindByNameAsync(userName);
+                if (user == null) return NotFound(new { message = "Không tìm thấy người dùng." });
+
+                var newSlugTitle = SlugHelper.Slugify(slugtitle);
+
+                var currentFavorite = user.FavoriteSlugTitle ?? string.Empty;
+                var list = currentFavorite.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToList();
+
+                string message;
+
+                if (list.Contains(newSlugTitle))
+                {
+                    list.Remove(newSlugTitle);
+                    message = "Đã xóa phim khỏi danh sách yêu thích.";
+                }
+                else
+                {
+                    list.Add(newSlugTitle);
+                    message = "Đã thêm phim vào danh sách yêu thích.";
+                }
+
+                user.FavoriteSlugTitle = string.Join(",", list);
+
+                var result = await _userManager.UpdateAsync(user);
+                if (result.Succeeded)
+                {
+                    return Ok(new { message });
+                }
+                else
+                {
+                    return StatusCode(500, new { message = "Có lỗi xảy ra khi cập nhật dữ liệu." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("FavoriteMovies")]
+        public async Task<IActionResult> GetFavoriteMovies()
+        {
+            var userName = User.Identity?.Name;
+            if (string.IsNullOrEmpty(userName))
+                return Unauthorized(new { message = "Không xác định được người dùng." });
+
+            var user = await _userManager.FindByNameAsync(userName);
+            if (user == null || string.IsNullOrEmpty(user.FavoriteSlugTitle))
+                return NotFound(new { message = "Không tìm thấy hoặc danh sách yêu thích trống." });
+
+            var slugTitles = user.FavoriteSlugTitle
+                .Split(",", StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim())
+                .ToList();
+
+            var movies = await _services.GetFavoriteMoviesBySlugTitlesAsync(slugTitles);
+
+            return Ok(movies);
+        }
+        [HttpPost("IncreaseView/{titleSlug}")]
+        public async Task<IActionResult> IncreaseView(string titleSlug)
+        {
+            if(titleSlug.IsNullOrEmpty()) return BadRequest(new {messsae = ""});
+            var result = await _services.IncreaseMovieView(titleSlug);
+            if (!result)
+                return NotFound();
+
+            return Ok(new { message = "Tăng View thành công." });
+        }
+        [HttpGet("GetNewestMovie")]
+        public async Task<IActionResult> GetNewestMovie()
+        {
+            try
+            {
+                if(!ModelState.IsValid) return BadRequest(ModelState);
+                var movie = await _services.GetNewestMovie();
+                return Ok(movie);
+            }catch(Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+        [Authorize]
+        [HttpPost("AddHistory")]
+        public async Task<IActionResult> AddMovieHistory([FromBody] HistoryDTOs historyDTOs)
+        {
+            try
+            {
+                if (!ModelState.IsValid) return BadRequest(ModelState);
+                var userName = User.Identity?.Name;
+                var result = await _services.AddHistoryMovie(historyDTOs.IdMovie, userName!);
+                if (result == true) return Ok(new { message = "Đã lưu phim vào lịch sử xem phim hoặc phim đã lưu vào lịch sử xem phim" });
+                return Unauthorized(new { message = "Trống thông tin " });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+        [Authorize]
+        [HttpGet("GetHistoryMovie")]
+        public async Task<IActionResult> GetHistoryMovie()
+        {
+            try
+            {
+                if (!ModelState.IsValid) return BadRequest(ModelState);
+                var UserName = User.Identity?.Name;
+                var Movie = await _services.GetHistoryMovie(UserName!);
+                return Ok(Movie);
+            }
+            catch(Exception ex)
             {
                 return StatusCode(500, ex.Message);
             }

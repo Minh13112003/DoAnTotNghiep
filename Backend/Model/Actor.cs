@@ -8,6 +8,6 @@
         public string SlugActorName { get; set; } = string.Empty;
         public string? UrlImage { get; set; } = string.Empty;
         public virtual List<SubActor>? SubActors { get; set; }
-
+        
     }
 }

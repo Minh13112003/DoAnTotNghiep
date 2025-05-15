@@ -7,6 +7,9 @@ namespace DoAnTotNghiep.DTOs
     {
         public string IdReport { get; set; } = string.Empty; 
         public string? IdMovie { get; set; } = string.Empty;
+        public string? IdComment { get; set; } = string.Empty;
+        public string? NameOfUserReported {  get; set; } = string.Empty;
+        public string? ContentCommentReported {  get; set; } = string.Empty;
         public string UserNameReporter { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
         public string? UserNameAdminFix { get; set; } = string.Empty;

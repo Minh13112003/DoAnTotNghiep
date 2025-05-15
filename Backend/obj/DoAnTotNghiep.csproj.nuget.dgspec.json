@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "E:\\DoAnTotNghiep\\Backend\\DoAnTotNghiep.csproj": {}
+    "E:\\DoAnTotNghiep\\Backend\\Backend\\DoAnTotNghiep.csproj": {}
   },
   "projects": {
-    "E:\\DoAnTotNghiep\\Backend\\DoAnTotNghiep.csproj": {
+    "E:\\DoAnTotNghiep\\Backend\\Backend\\DoAnTotNghiep.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\DoAnTotNghiep\\Backend\\DoAnTotNghiep.csproj",
+        "projectUniqueName": "E:\\DoAnTotNghiep\\Backend\\Backend\\DoAnTotNghiep.csproj",
         "projectName": "DoAnTotNghiep",
-        "projectPath": "E:\\DoAnTotNghiep\\Backend\\DoAnTotNghiep.csproj",
+        "projectPath": "E:\\DoAnTotNghiep\\Backend\\Backend\\DoAnTotNghiep.csproj",
         "packagesPath": "C:\\Users\\FPT\\.nuget\\packages\\",
-        "outputPath": "E:\\DoAnTotNghiep\\Backend\\obj\\",
+        "outputPath": "E:\\DoAnTotNghiep\\Backend\\Backend\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\FPT\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -44,6 +44,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "MailKit": {
+              "target": "Package",
+              "version": "[4.11.0, )"
+            },
             "Microsoft.AspNet.Identity.EntityFramework": {
               "target": "Package",
               "version": "[2.2.4, )"
@@ -98,7 +102,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.310/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.312/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

@@ -9,6 +9,6 @@ namespace DoAnTotNghiep.DTOs
         [Required]
         public string Password { get; set; } = string.Empty;
 
-
+        public string OTP {  get; set; } = string.Empty;
     }
 }

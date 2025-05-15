@@ -50,11 +50,16 @@ namespace DoAnTotNghiep.Controllers
                 }
                 return BadRequest(new { message = "Thêm thất bại" });
             }
+            catch (InvalidOperationException ex2)
+            {
+                return BadRequest(ex2.Message); 
+            }
             catch (Exception ex)
             {
 
                 return StatusCode(500, ex.Message);
             }
+            
         }
 
         //Hiển thị danh sách report cho phía admin

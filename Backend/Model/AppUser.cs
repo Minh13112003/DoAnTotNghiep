@@ -6,5 +6,11 @@ namespace DoAnTotNghiep.Model
     public class AppUser : IdentityUser
     {        
         public int? Age {  get; set; }
+        public string? FavoriteSlugTitle { get; set; }
+        public bool IsVip {  get; set; }
+        public string? OTP {  get; set; }
+        public DateTime? OtpCreatedAt {  get; set; }
+        public string? RefreshToken { get; set; }
+        public DateTime RefreshTokenExpiryTime { get; set; }
     }
 }

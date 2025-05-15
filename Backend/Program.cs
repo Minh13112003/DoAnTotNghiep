@@ -82,8 +82,6 @@ builder.Services.AddAuthentication(options =>
     
     });
 
-builder.Services.AddScoped<IAccountRepository,AccountRepository>();
-builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ITokenServices, TokenServices>();
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
 builder.Services.AddScoped<IMovieServices,  MovieServices>();
@@ -101,6 +99,10 @@ builder.Services.AddScoped<IReportServices, ReportServices>();
 builder.Services.AddScoped<IReportRepository, ReportRepository>();
 builder.Services.AddScoped<IActorRepository, ActorRepository>();
 builder.Services.AddScoped<IActorServices, ActorServices>();
+builder.Services.AddScoped<IEmailAuthenticationServices, EmailAuthenticationServices>();
+builder.Services.AddScoped<IVnPayService, VnPayService>();
+builder.Services.AddScoped<IMovieRatingRepository, MovieRatingRepository>();
+builder.Services.AddScoped<IMovieRatingService, MovieRatingService>();
 
 
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -112,7 +114,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 
 /*builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    serverOptions.ListenAnyIP(5286); // Cổng mà bạn muốn API chạy trên
+    serverOptions.ListenAnyIP(5286); 
 });*/
 
 builder.Services.AddCors(options =>
@@ -123,7 +125,9 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
+
 });
+
 
 var app = builder.Build();
 

@@ -1,4 +1,5 @@
 ﻿using DoAnTotNghiep.DTOs;
+using DoAnTotNghiep.Migrations;
 using DoAnTotNghiep.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -54,9 +55,11 @@ namespace DoAnTotNghiep.Controllers
             try
             {
                 if (!ModelState.IsValid) return BadRequest(ModelState);
-                var comment = await _commentServices.UpdateComment(commentDTOs);
-                if (comment != true) return BadRequest(new { message = "Thêm bình luận thất bại" });
-                return Ok(new { message = "Thêm bình luận thành công" });
+                var username = User.Identity?.Name;
+                if (string.IsNullOrEmpty(username)) return BadRequest(new { message = "Không tìm thấy người dùng" });
+                var comment = await _commentServices.UpdateComment(username,commentDTOs);
+                if (comment != true) return BadRequest(new { message = "Sửa bình luận thất bại" });
+                return Ok(new { message = "Sửa bình luận thành công" });
             }
             catch (Exception ex)
             {
@@ -73,9 +76,9 @@ namespace DoAnTotNghiep.Controllers
                 var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
 
                 if (string.IsNullOrEmpty(username)) return BadRequest(new { message = "Không tìm thấy người dùng" });
-                var CommentDelete = await _commentServices.DeleteComment(role,username, Idcomment);
-                if (CommentDelete != true) return BadRequest(new { messsage = "Xóa phim thất bại"});
-                return Ok(new { message = "Xóa phim thành công" });
+                var CommentDelete = await _commentServices.DeleteComment(role ,username, Idcomment);
+                if (CommentDelete != true) return BadRequest(new { messsage = "Xóa bình luận thất bại"});
+                return Ok(new { message = "Xóa bình luận thành công" });
             } catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);

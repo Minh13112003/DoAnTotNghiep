@@ -9,6 +9,7 @@ namespace DoAnTotNghiep.Model
 
         public int Episode { get; set; }
         public string UrlMovie {  get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
         [JsonIgnore]
         public Movie? Movie { get; set; }
     }

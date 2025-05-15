@@ -4,6 +4,7 @@ namespace DoAnTotNghiep.Services
 {
     public interface ITokenServices
     {
-        public string CreateToken(AppUser appUser, List<string> roles);
+        string CreateToken(AppUser appUser, List<string> roles);
+        string GenerateRefreshToken();
     }
 }

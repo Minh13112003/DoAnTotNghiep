@@ -31,7 +31,7 @@ namespace DoAnTotNghiep.Controllers
             }
         }
         [HttpPost("AddLinkMovie")]
-        public async Task<IActionResult> AddLinkMovie(LinkMovieDTOs linkmovie)
+        public async Task<IActionResult> AddLinkMovie(LinkMovieToAddDTOs linkmovie)
         {
             try
             {
@@ -67,8 +67,8 @@ namespace DoAnTotNghiep.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
-        [HttpPost("UpdateLinkMovie")]
-        public async Task<IActionResult> UpdateLinkMovie(LinkMovie linkMovie)
+        [HttpPut("UpdateLinkMovie")]
+        public async Task<IActionResult> UpdateLinkMovie(LinkMovieDTOs linkMovie)
         {
             try
             {
@@ -82,5 +82,21 @@ namespace DoAnTotNghiep.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+        [HttpGet("GetLinkMovieByIdMovie/{idmovie}")]
+        public async Task<IActionResult> GetLinkMovieByIdMovie([FromRoute]string idmovie)
+        {
+            try
+            {
+                if (!ModelState.IsValid) return BadRequest(ModelState);
+                var Linkmovie = await _services.GetMovieByIdMovie(idmovie);
+                if (Linkmovie != null) return Ok(Linkmovie);
+                return BadRequest(new { message = "Phim chưa có tập" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
     }
 }

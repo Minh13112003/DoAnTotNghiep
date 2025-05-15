@@ -9,9 +9,12 @@ namespace DoAnTotNghiep.Repository
         Task<bool> UpdateMovie(MovieDTOs movieDTOs, string Idmovie);
         Task<string> DeleteMovie(string movieId);
         Task<List<Movie>> GetAllMovie();
-        Task<List<Movie>> GetMovieByName(string movieName);
-        //Task<List<Movie>> GetMovieByCategory(string categoryName);
-        Task<List<Movie>> GetMovieByType(string typeName);
         
+        Task<List<MovieToShowDTOs>> GetFavoriteMoviesBySlugTitlesAsync(List<string> slugTitles);
+
+        Task<bool> IncreaseMovieView(string titleSlug);
+        Task<List<MovieToShowDTOs>> GetNewestMovie();
+        Task<bool> AddHistoryMovie(string IdMovie, string UserName);
+        Task<List<MovieToShowDTOs>> GetHistoryMovie(string UserName);
     }
 }

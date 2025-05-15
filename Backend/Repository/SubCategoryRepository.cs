@@ -7,7 +7,6 @@ using Npgsql;
 
 namespace DoAnTotNghiep.Repository
 {
-
     public class SubCategoryRepository : ISubCategoryRepository
     {
         private readonly DatabaseContext _databaseContext;
@@ -25,6 +24,7 @@ namespace DoAnTotNghiep.Repository
             { 4, "Đã kết thúc" },
             { 5, "Đã hoàn thành" }
         };
+       
 
         public async Task<bool> AddMovie(MovieToAddDTOs movieToAddDTOs)
         {
@@ -38,6 +38,8 @@ namespace DoAnTotNghiep.Repository
             {
                 return false; // Phim đã tồn tại
             }
+            int statusValue = movieStatusDict
+    .FirstOrDefault(x => x.Value == movieToAddDTOs.StatusText).Key;
 
             // Tạo phim mới
             var movie = new Movie
@@ -49,18 +51,19 @@ namespace DoAnTotNghiep.Repository
                 Nation = movieToAddDTOs.Nation,
                 TypeMovie = movieToAddDTOs.TypeMovie,
                 SlugTypeMovie = SlugHelper.Slugify(movieToAddDTOs.TypeMovie),
-                Status = movieToAddDTOs.Status,
-                NumberOfMovie = movieToAddDTOs.NumberOfMovie,
+                Status = statusValue.ToString(),
+                NumberOfMovie = 0,
                 Duration = movieToAddDTOs.Duration,
                 Quality = movieToAddDTOs.Quality,
                 Language = movieToAddDTOs.Language,
                 Block = movieToAddDTOs.Block,
                 NameDirector = movieToAddDTOs.NameDirector,
                 IsVip = movieToAddDTOs.IsVip,
-                View = movieToAddDTOs.View,
+                View = 0,
                 Image = movieToAddDTOs.Image,
                 BackgroundImage = movieToAddDTOs.BackgroundImage,
                 SlugNation = SlugHelper.Slugify(movieToAddDTOs.Nation),
+                Point = 0
             };
             await _databaseContext.Movies.AddAsync(movie);
 
@@ -153,7 +156,6 @@ namespace DoAnTotNghiep.Repository
             return true;
         }
 
-
         public async Task<bool> CreateSubCategory(string IdMovie, string IdCategory)
         {
             var movieExists = await _databaseContext.Movies.AnyAsync(i => i.IdMovie == IdMovie);
@@ -209,39 +211,92 @@ namespace DoAnTotNghiep.Repository
         
         }
 
-        public async Task<List<MovieToShowDTOs>> GetAllMovie()
+        public async Task<List<MovieToShowDTOs>> GetAllMovie(string role)
         {
-            var sql = @"
-                
-                SELECT 
-                    m.""Id"", 
-                    m.""Title"", 
-                    m.""Description"", 
-                    m.""Nation"", 
-                    m.""TypeMovie"", 
-                    m.""Status"", 
-                    m.""NumberOfMovie"", 
-                    m.""Duration"", 
-                    m.""Quality"", 
-                    m.""Language"", 
-                    m.""View"", 
-                    m.""Image"", 
-                    m.""BackgroundImage"",
-                    m.""IsVip"",
-                    m.""Block"",
-                    m.""NameDirector"",
-                    COALESCE(STRING_AGG(DISTINCT c.""NameCategories"", ', '), '') AS ""NameCategories"",
-                    COALESCE(STRING_AGG(DISTINCT a.""ActorName"", ', '), '') AS ""NameActors"",
-                    COALESCE(STRING_AGG(DISTINCT lm.""UrlMovie"" || '-Tap-' || lm.""Episode"", ', '), '') AS ""UrlMovie""
-                FROM ""Movie"" m
-                LEFT JOIN ""SubCategories"" sc ON m.""Id"" = sc.""IdMovie""
-                LEFT JOIN ""Category"" c ON sc.""IdCategory"" = c.""IdCategories""
-                LEFT JOIN ""LinkMovie"" lm ON m.""Id"" = lm.""IdMovie""
-                LEFT JOIN ""SubActor"" sa ON m.""Id"" = sa.""IdMovie""
-                LEFT JOIN ""Actor"" a ON sa.""IdActor"" = a.""IdActor""
-                GROUP BY m.""Id"";";
+            if (role == "Admin")
+            {
+                var sql = @"
+                    SELECT 
+                        m.""Id"", 
+                        m.""Title"", 
+                        m.""Description"", 
+                        m.""Nation"", 
+                        m.""TypeMovie"", 
+                        m.""Status"", 
+                        m.""NumberOfMovie"", 
+                        m.""Duration"", 
+                        m.""Quality"", 
+                        m.""Language"", 
+                        m.""View"", 
+                        m.""Image"", 
+                        m.""BackgroundImage"",
+                        m.""IsVip"",
+                        m.""Block"",
+                        m.""NameDirector"",
+                        m.""Point"",
+                        COALESCE(STRING_AGG(DISTINCT c.""NameCategories"", ', '), '') AS ""NameCategories"",
+                        COALESCE(STRING_AGG(DISTINCT a.""ActorName"", ', '), '') AS ""NameActors"",
+                        lm.""UrlMovie"",
+                        lm.""Episode"",
+                        lm.""CreatedAt""
+                    FROM ""Movie"" m
+                    LEFT JOIN ""SubCategories"" sc ON m.""Id"" = sc.""IdMovie""
+                    LEFT JOIN ""Category"" c ON sc.""IdCategory"" = c.""IdCategories""
+                    LEFT JOIN (
+                        SELECT DISTINCT ON (""IdMovie"") ""IdMovie"", ""Episode"", ""CreatedAt"", ""UrlMovie""
+                        FROM ""LinkMovie""
+                        ORDER BY ""IdMovie"", ""CreatedAt"" DESC
+                    ) lm ON m.""Id"" = lm.""IdMovie""
+                    LEFT JOIN ""SubActor"" sa ON m.""Id"" = sa.""IdMovie""
+                    LEFT JOIN ""Actor"" a ON sa.""IdActor"" = a.""IdActor""
+                    GROUP BY m.""Id"", lm.""UrlMovie"", lm.""Episode"", lm.""CreatedAt"";
+                    ";
 
-            return await _databaseContext.Database.SqlQueryRaw<MovieToShowDTOs>(sql).ToListAsync();
+
+
+                return await _databaseContext.Database.SqlQueryRaw<MovieToShowDTOs>(sql).ToListAsync();
+            }
+            else
+            {
+                var sql = @"
+                    SELECT 
+                        m.""Id"", 
+                        m.""Title"", 
+                        m.""Description"", 
+                        m.""Nation"", 
+                        m.""TypeMovie"", 
+                        m.""Status"", 
+                        m.""NumberOfMovie"", 
+                        m.""Duration"", 
+                        m.""Quality"", 
+                        m.""Language"", 
+                        m.""View"", 
+                        m.""Image"", 
+                        m.""BackgroundImage"",
+                        m.""IsVip"",
+                        m.""Block"",
+                        m.""NameDirector"",
+                        m.""Point"",
+                        COALESCE(STRING_AGG(DISTINCT c.""NameCategories"", ', '), '') AS ""NameCategories"",
+                        COALESCE(STRING_AGG(DISTINCT a.""ActorName"", ', '), '') AS ""NameActors"",
+                        lm.""UrlMovie"",
+                        lm.""Episode"",
+                        lm.""CreatedAt""
+                    FROM ""Movie"" m
+                    LEFT JOIN ""SubCategories"" sc ON m.""Id"" = sc.""IdMovie""
+                    LEFT JOIN ""Category"" c ON sc.""IdCategory"" = c.""IdCategories""
+                    LEFT JOIN (
+                        SELECT DISTINCT ON (""IdMovie"") ""IdMovie"", ""Episode"", ""CreatedAt"", ""UrlMovie""
+                        FROM ""LinkMovie""
+                        ORDER BY ""IdMovie"", ""CreatedAt"" DESC
+                    ) lm ON m.""Id"" = lm.""IdMovie""
+                    LEFT JOIN ""SubActor"" sa ON m.""Id"" = sa.""IdMovie""
+                    LEFT JOIN ""Actor"" a ON sa.""IdActor"" = a.""IdActor""
+                    WHERE m.""Block"" = false
+                    GROUP BY m.""Id"", lm.""UrlMovie"", lm.""Episode"", lm.""CreatedAt"";
+                    ";
+                return await _databaseContext.Database.SqlQueryRaw<MovieToShowDTOs>(sql).ToListAsync();
+            }
         }
 
         public async Task<List<MovieToShowDTOs>> GetMovieByCategory(string SlugCategory)
@@ -271,18 +326,27 @@ namespace DoAnTotNghiep.Repository
                     m.""View"", 
                     m.""Image"",
                     m.""BackgroundImage"",
+                    m.""Point"",
+                    lm.""Episode"",
+                    lm.""CreatedAt"",
                     COALESCE(STRING_AGG(DISTINCT c.""NameCategories"", ', '), '') AS ""NameCategories"",
                     COALESCE(STRING_AGG(DISTINCT a.""ActorName"", ', '), '') AS ""NameActors"",
                     COALESCE(STRING_AGG(DISTINCT lm.""UrlMovie"" || '-Tap-' || lm.""Episode"", ', '), '') AS ""UrlMovie""
                 FROM ""Movie"" m
                 LEFT JOIN ""SubCategories"" sc ON m.""Id"" = sc.""IdMovie""
                 LEFT JOIN ""Category"" c ON sc.""IdCategory"" = c.""IdCategories""
-                LEFT JOIN ""LinkMovie"" lm ON m.""Id"" = lm.""IdMovie""
+                
+                LEFT JOIN (
+                    SELECT DISTINCT ON (""IdMovie"") ""IdMovie"", ""Episode"", ""CreatedAt"", ""UrlMovie""
+                    FROM ""LinkMovie""
+                    ORDER BY ""IdMovie"", ""CreatedAt"" DESC
+                ) lm ON m.""Id"" = lm.""IdMovie""
                 LEFT JOIN ""SubActor"" sa ON m.""Id"" = sa.""IdMovie""
                 LEFT JOIN ""Actor"" a ON sa.""IdActor"" = a.""IdActor""
                 WHERE m.""Id"" IN (SELECT ""Id"" FROM MovieFiltered)
-                GROUP BY m.""Id"";";
-
+                AND m.""Block"" = false
+                GROUP BY m.""Id"", lm.""UrlMovie"", lm.""Episode"", lm.""CreatedAt"";
+            ";
             return await _databaseContext.Database
         .SqlQueryRaw<MovieToShowDTOs>(sql, new[] { new NpgsqlParameter("@slugcategory", SlugCategory) })
             .ToListAsync();
@@ -308,20 +372,70 @@ namespace DoAnTotNghiep.Repository
                     m.""Block"",
                     m.""NameDirector"",
                     m.""BackgroundImage"",
+                    m.""Point"",
+                    lm.""Episode"",
+                    lm.""CreatedAt"",
                     COALESCE(STRING_AGG(DISTINCT c.""NameCategories"", ', '), '') AS ""NameCategories"",
                     COALESCE(STRING_AGG(DISTINCT a.""ActorName"", ', '), '') AS ""NameActors"",
                     COALESCE(STRING_AGG(DISTINCT lm.""UrlMovie"" || '-Tap-' || lm.""Episode"", ', '), '') AS ""UrlMovie""
                     FROM ""Movie"" m
                 LEFT JOIN ""SubCategories"" sc ON m.""Id"" = sc.""IdMovie""
                 LEFT JOIN ""Category"" c ON sc.""IdCategory"" = c.""IdCategories""
-                LEFT JOIN ""LinkMovie"" lm ON m.""Id"" = lm.""IdMovie""
                 LEFT JOIN ""SubActor"" sa ON m.""Id"" = sa.""IdMovie""
+                LEFT JOIN (
+                    SELECT DISTINCT ON (""IdMovie"") ""IdMovie"", ""Episode"", ""CreatedAt"", ""UrlMovie""
+                    FROM ""LinkMovie""
+                    ORDER BY ""IdMovie"", ""CreatedAt"" DESC
+                ) lm ON m.""Id"" = lm.""IdMovie""
                 LEFT JOIN ""Actor"" a ON sa.""IdActor"" = a.""IdActor""
                 WHERE m.""SlugTitle"" ILIKE '%' || @titleSlug || '%'
-                GROUP BY m.""Id"";";
+                GROUP BY m.""Id"", lm.""UrlMovie"", lm.""Episode"", lm.""CreatedAt"";";
 
             return await _databaseContext.Database
         .SqlQueryRaw<MovieToShowDTOs>(sql, new[] { new NpgsqlParameter("@titleSlug", titleSlug) })
+            .ToListAsync();
+        }
+        public async Task<List<MovieToShowDTOs>> GetMovieById(string id)
+        {
+            var sql = @"
+                SELECT 
+                    m.""Id"", 
+                    m.""Title"",  
+                    m.""Description"", 
+                    m.""Nation"", 
+                    m.""TypeMovie"", 
+                    m.""Status"", 
+                    m.""NumberOfMovie"",
+                    m.""Duration"", 
+                    m.""Quality"", 
+                    m.""Language"", 
+                    m.""View"", 
+                    m.""Image"",
+                    m.""IsVip"",
+                    m.""Block"",
+                    m.""NameDirector"",
+                    m.""BackgroundImage"",
+                    m.""Point"",
+                    lm.""Episode"",
+                    lm.""CreatedAt"",
+                    COALESCE(STRING_AGG(DISTINCT c.""NameCategories"", ', '), '') AS ""NameCategories"",
+                    COALESCE(STRING_AGG(DISTINCT a.""ActorName"", ', '), '') AS ""NameActors"",
+                    COALESCE(STRING_AGG(DISTINCT lm.""UrlMovie"" || '-Tap-' || lm.""Episode"", ', '), '') AS ""UrlMovie""
+                    FROM ""Movie"" m
+                LEFT JOIN ""SubCategories"" sc ON m.""Id"" = sc.""IdMovie""
+                LEFT JOIN ""Category"" c ON sc.""IdCategory"" = c.""IdCategories""
+                LEFT JOIN ""SubActor"" sa ON m.""Id"" = sa.""IdMovie""
+                LEFT JOIN (
+                    SELECT DISTINCT ON (""IdMovie"") ""IdMovie"", ""Episode"", ""CreatedAt"", ""UrlMovie""
+                    FROM ""LinkMovie""
+                    ORDER BY ""IdMovie"", ""CreatedAt"" DESC
+                ) lm ON m.""Id"" = lm.""IdMovie""
+                LEFT JOIN ""Actor"" a ON sa.""IdActor"" = a.""IdActor""
+                WHERE m.""Id"" = @id
+                GROUP BY m.""Id"", lm.""UrlMovie"", lm.""Episode"", lm.""CreatedAt"";";
+
+            return await _databaseContext.Database
+        .SqlQueryRaw<MovieToShowDTOs>(sql, new[] { new NpgsqlParameter("@id", id) })
             .ToListAsync();
         }
 
@@ -345,129 +459,166 @@ namespace DoAnTotNghiep.Repository
                     m.""NameDirector"",
                     m.""Image"", 
                     m.""BackgroundImage"",
+                    m.""Point"",
+                    lm.""Episode"",
+                    lm.""CreatedAt"",
                     COALESCE(STRING_AGG(DISTINCT c.""NameCategories"", ', '), '') AS ""NameCategories"",
                     COALESCE(STRING_AGG(DISTINCT a.""ActorName"", ', '), '') AS ""NameActors"",
                     COALESCE(STRING_AGG(DISTINCT lm.""UrlMovie"" || '-Tap-' || lm.""Episode"", ', '), '') AS ""UrlMovie""
                 FROM ""Movie"" m
                 LEFT JOIN ""SubCategories"" sc ON m.""Id"" = sc.""IdMovie""
                 LEFT JOIN ""Category"" c ON sc.""IdCategory"" = c.""IdCategories""
-                LEFT JOIN ""LinkMovie"" lm ON m.""Id"" = lm.""IdMovie""
+                LEFT JOIN (
+                    SELECT DISTINCT ON (""IdMovie"") ""IdMovie"", ""Episode"", ""CreatedAt"", ""UrlMovie""
+                    FROM ""LinkMovie""
+                    ORDER BY ""IdMovie"", ""CreatedAt"" DESC
+                ) lm ON m.""Id"" = lm.""IdMovie""
                 LEFT JOIN ""SubActor"" sa ON m.""Id"" = sa.""IdMovie""
                 LEFT JOIN ""Actor"" a ON sa.""IdActor"" = a.""IdActor""
                 WHERE m.""SlugTypeMovie"" ILIKE '%' || @slugtype || '%'
-                GROUP BY m.""Id"";";
+                GROUP BY m.""Id"", lm.""UrlMovie"", lm.""Episode"", lm.""CreatedAt"";";
 
             return await _databaseContext.Database
         .SqlQueryRaw<MovieToShowDTOs>(sql, new[] { new NpgsqlParameter("@slugtype", slugtype) })
             .ToListAsync();
         }
 
-        public async Task<List<MovieToShowDTOs>> SearchMovie(string? Keyword)
+        public async Task<List<MovieToShowDTOs>> SearchMovie(string? Keyword, string role)
         {
-            if(Keyword != null)
-            {      
+            if (Keyword != null)
+            {
                 string SlugKeyword = SlugHelper.Slugify(Keyword);
-                Dictionary<int, string> slugStatusDict = movieStatusDict.ToDictionary(                     
-                        x => x.Key, // Giữ lại số tương ứng
-                        x => SlugHelper.Slugify(x.Value) 
+                Dictionary<int, string> slugStatusDict = movieStatusDict.ToDictionary(
+                    x => x.Key,
+                    x => SlugHelper.Slugify(x.Value)
                 );
 
                 var foundPair = slugStatusDict.FirstOrDefault(x => x.Value == SlugKeyword);
-                if (!foundPair.Equals(default(KeyValuePair<int, string>))) {
-                    var sql = @"
-                        SELECT 
-                            m.""Id"", 
-                            m.""Title"", 
-                            m.""Description"", 
-                            m.""Nation"", 
-                            m.""TypeMovie"", 
-                            m.""Status"", 
-                            m.""NumberOfMovie"", 
-                            m.""Duration"",
-                            m.""Quality"", 
-                            m.""Language"", 
-                            m.""View"", 
-                            m.""Image"",
-                            m.""IsVip"",
-                            m.""Block"",
-                            m.""NameDirector"",
-                            m.""BackgroundImage"",
-                            COALESCE(STRING_AGG(DISTINCT c.""NameCategories"", ', '), '') AS ""NameCategories"",
-                            COALESCE(STRING_AGG(DISTINCT a.""ActorName"", ', '), '') AS ""NameActors"",
-                            COALESCE(STRING_AGG(DISTINCT lm.""UrlMovie"" || '-Tap-' || lm.""Episode"", ', '), '') AS ""UrlMovie""
-                        FROM ""Movie"" m
-                        LEFT JOIN ""SubCategories"" sc ON m.""Id"" = sc.""IdMovie""
-                        LEFT JOIN ""Category"" c ON sc.""IdCategory"" = c.""IdCategories""
-                        LEFT JOIN ""LinkMovie"" lm ON m.""Id"" = lm.""IdMovie""
-                        LEFT JOIN ""SubActor"" sa ON m.""Id"" = sa.""IdMovie""
-                        LEFT JOIN ""Actor"" a ON sa.""IdActor"" = a.""IdActor""
-                        WHERE m.""Status"" ILIKE '%' || @statusValue || '%'
-                        GROUP BY m.""Id"";";
+                if (!foundPair.Equals(default(KeyValuePair<int, string>)))
+                {
+                    string whereCondition = @"
+                WHERE m.""Status"" ILIKE '%' || @statusValue || '%'";
+
+                    if (role != "Admin")
+                    {
+                        whereCondition += @" AND m.""Block"" = false";
+                    }
+
+                    string sql = $@"
+                SELECT 
+                    m.""Id"", 
+                    m.""Title"", 
+                    m.""Description"", 
+                    m.""Nation"", 
+                    m.""TypeMovie"", 
+                    m.""Status"", 
+                    m.""NumberOfMovie"", 
+                    m.""Duration"",
+                    m.""Quality"", 
+                    m.""Language"", 
+                    m.""View"", 
+                    m.""Image"",
+                    m.""IsVip"",
+                    m.""Block"",
+                    m.""NameDirector"",
+                    m.""BackgroundImage"",
+                    m.""Point"",
+                    lm.""Episode"",
+                    lm.""CreatedAt"",
+                    COALESCE(STRING_AGG(DISTINCT c.""NameCategories"", ', '), '') AS ""NameCategories"",
+                    COALESCE(STRING_AGG(DISTINCT a.""ActorName"", ', '), '') AS ""NameActors"",
+                    COALESCE(STRING_AGG(DISTINCT lm.""UrlMovie"" || '-Tap-' || lm.""Episode"", ', '), '') AS ""UrlMovie""
+                FROM ""Movie"" m
+                LEFT JOIN ""SubCategories"" sc ON m.""Id"" = sc.""IdMovie""
+                LEFT JOIN ""Category"" c ON sc.""IdCategory"" = c.""IdCategories""
+                LEFT JOIN (
+                    SELECT DISTINCT ON (""IdMovie"") ""IdMovie"", ""Episode"", ""CreatedAt"", ""UrlMovie""
+                    FROM ""LinkMovie""
+                    ORDER BY ""IdMovie"", ""CreatedAt"" DESC
+                ) lm ON m.""Id"" = lm.""IdMovie""
+                LEFT JOIN ""SubActor"" sa ON m.""Id"" = sa.""IdMovie""
+                LEFT JOIN ""Actor"" a ON sa.""IdActor"" = a.""IdActor""
+                {whereCondition}
+                GROUP BY m.""Id"", lm.""UrlMovie"", lm.""Episode"", lm.""CreatedAt"";";
+
                     return await _databaseContext.Database
-                       .SqlQueryRaw<MovieToShowDTOs>(sql, new[] { new NpgsqlParameter("@statusValue", (foundPair.Key).ToString()) })
-                           .ToListAsync();
+                        .SqlQueryRaw<MovieToShowDTOs>(sql, new[] {
+                    new NpgsqlParameter("@statusValue", (foundPair.Key).ToString())
+                        })
+                        .ToListAsync();
                 }
                 else
                 {
+                    // phần tìm kiếm theo keyword, giữ nguyên logic
                     var sql = @"
-                        WITH MovieFiltered AS (
-                            SELECT DISTINCT m.""Id""
-                            FROM ""Movie"" m
-                            LEFT JOIN ""SubCategories"" sc ON m.""Id"" = sc.""IdMovie""
-                            LEFT JOIN ""Category"" c ON sc.""IdCategory"" = c.""IdCategories""
-                            WHERE c.""SlugNameCategories"" ILIKE '%' || @keyword || '%'
-                        ),
-                        ActorFiltered AS (
-                            SELECT DISTINCT m.""Id""
-                            FROM ""Movie"" m
-                            LEFT JOIN ""SubActor"" sa ON m.""Id"" = sa.""IdMovie""
-                            LEFT JOIN ""Actor"" a ON sa.""IdActor"" = a.""IdActor""
-                            WHERE a.""SlugActorName"" ILIKE '%' || @keyword || '%'
-                        )
-                        SELECT 
-                            m.""Id"", 
-                            m.""Title"",  
-                            m.""Description"", 
-                            m.""Nation"", 
-                            m.""TypeMovie"", 
-                            m.""Status"", 
-                            m.""NumberOfMovie"",
-                            m.""Duration"", 
-                            m.""Quality"", 
-                            m.""Language"", 
-                            m.""View"", 
-                            m.""Image"", 
-                            m.""IsVip"",
-                            m.""Block"",
-                            m.""NameDirector"",
-                            m.""BackgroundImage"",
-                            COALESCE(STRING_AGG(DISTINCT c.""NameCategories"", ', '), '') AS ""NameCategories"",
-                            COALESCE(STRING_AGG(DISTINCT a.""ActorName"", ', '), '') AS ""NameActors"",
-                            COALESCE(STRING_AGG(DISTINCT lm.""UrlMovie"" || '-Tap-' || lm.""Episode"", ', '), '') AS ""UrlMovie""
-                        FROM ""Movie"" m
-                        LEFT JOIN ""SubCategories"" sc ON m.""Id"" = sc.""IdMovie""
-                        LEFT JOIN ""Category"" c ON sc.""IdCategory"" = c.""IdCategories""
-                        LEFT JOIN ""LinkMovie"" lm ON m.""Id"" = lm.""IdMovie"" 
-                        LEFT JOIN ""SubActor"" sa ON m.""Id"" = sa.""IdMovie""
-                        LEFT JOIN ""Actor"" a ON sa.""IdActor"" = a.""IdActor""
-                        WHERE 
-                            (m.""SlugTitle"" ILIKE '%' || @keyword || '%'
-                             OR m.""SlugTypeMovie"" ILIKE '%' || @keyword || '%'
-                             OR m.""SlugNation"" ILIKE '%' || @keyword || '%'
-                             OR m.""Id"" IN (SELECT ""Id"" FROM ActorFiltered)
-                             OR m.""Id"" IN (SELECT ""Id"" FROM MovieFiltered)
-                            )
-                        GROUP BY m.""Id"";";
+                WITH MovieFiltered AS (
+                    SELECT DISTINCT m.""Id""
+                    FROM ""Movie"" m
+                    LEFT JOIN ""SubCategories"" sc ON m.""Id"" = sc.""IdMovie""
+                    LEFT JOIN ""Category"" c ON sc.""IdCategory"" = c.""IdCategories""
+                    WHERE c.""SlugNameCategories"" ILIKE '%' || @keyword || '%'
+                ),
+                ActorFiltered AS (
+                    SELECT DISTINCT m.""Id""
+                    FROM ""Movie"" m
+                    LEFT JOIN ""SubActor"" sa ON m.""Id"" = sa.""IdMovie""
+                    LEFT JOIN ""Actor"" a ON sa.""IdActor"" = a.""IdActor""
+                    WHERE a.""SlugActorName"" ILIKE '%' || @keyword || '%'
+                )
+                SELECT 
+                    m.""Id"", 
+                    m.""Title"",  
+                    m.""Description"", 
+                    m.""Nation"", 
+                    m.""TypeMovie"", 
+                    m.""Status"", 
+                    m.""NumberOfMovie"",
+                    m.""Duration"", 
+                    m.""Quality"", 
+                    m.""Language"", 
+                    m.""View"", 
+                    m.""Image"", 
+                    m.""IsVip"",
+                    m.""Block"",
+                    m.""NameDirector"",
+                    m.""BackgroundImage"",
+                    m.""Point"",
+                    lm.""Episode"",
+                    lm.""CreatedAt"",
+                    COALESCE(STRING_AGG(DISTINCT c.""NameCategories"", ', '), '') AS ""NameCategories"",
+                    COALESCE(STRING_AGG(DISTINCT a.""ActorName"", ', '), '') AS ""NameActors"",
+                    COALESCE(STRING_AGG(DISTINCT lm.""UrlMovie"" || '-Tap-' || lm.""Episode"", ', '), '') AS ""UrlMovie""
+                FROM ""Movie"" m
+                LEFT JOIN ""SubCategories"" sc ON m.""Id"" = sc.""IdMovie""
+                LEFT JOIN ""Category"" c ON sc.""IdCategory"" = c.""IdCategories""
+                LEFT JOIN (
+                    SELECT DISTINCT ON (""IdMovie"") ""IdMovie"", ""Episode"", ""CreatedAt"", ""UrlMovie""
+                    FROM ""LinkMovie""
+                    ORDER BY ""IdMovie"", ""CreatedAt"" DESC
+                ) lm ON m.""Id"" = lm.""IdMovie""
+                LEFT JOIN ""SubActor"" sa ON m.""Id"" = sa.""IdMovie""
+                LEFT JOIN ""Actor"" a ON sa.""IdActor"" = a.""IdActor""
+                WHERE 
+                    (m.""SlugTitle"" ILIKE '%' || @keyword || '%'
+                     OR m.""SlugTypeMovie"" ILIKE '%' || @keyword || '%'
+                     OR m.""SlugNation"" ILIKE '%' || @keyword || '%'
+                     OR m.""Id"" IN (SELECT ""Id"" FROM ActorFiltered)
+                     OR m.""Id"" IN (SELECT ""Id"" FROM MovieFiltered)                     
+                    )
+                AND m.""Block"" = false
+                GROUP BY m.""Id"", lm.""UrlMovie"", lm.""Episode"", lm.""CreatedAt"";";
+
                     return await _databaseContext.Database
-                        .SqlQueryRaw<MovieToShowDTOs>(sql, new[] { new NpgsqlParameter("@keyword", SlugKeyword) })
-                            .ToListAsync();
+                        .SqlQueryRaw<MovieToShowDTOs>(sql, new[] {
+                    new NpgsqlParameter("@keyword", SlugKeyword)
+                        })
+                        .ToListAsync();
                 }
-                
             }
+
             return null;
-
-
         }
+
 
         public async Task<bool> UpdateMovie(MovieToUpdateDTOs movieToAddDTOs)
         {
@@ -479,6 +630,8 @@ namespace DoAnTotNghiep.Repository
             {
                 return false; // Không tìm thấy phim
             }
+            int statusValue = movieStatusDict
+    .FirstOrDefault(x => x.Value == movieToAddDTOs.StatusText).Key;
 
             // Cập nhật thông tin Movie
             existingMovie.Title = movieToAddDTOs.Title;
@@ -487,15 +640,13 @@ namespace DoAnTotNghiep.Repository
             existingMovie.Nation = movieToAddDTOs.Nation;
             existingMovie.TypeMovie = movieToAddDTOs.TypeMovie;
             existingMovie.SlugTypeMovie = SlugHelper.Slugify(movieToAddDTOs.TypeMovie);
-            existingMovie.Status = movieToAddDTOs.Status;
-            existingMovie.NumberOfMovie = movieToAddDTOs.NumberOfMovie;
+            existingMovie.Status = statusValue.ToString();
             existingMovie.Duration = movieToAddDTOs.Duration;
             existingMovie.Quality = movieToAddDTOs.Quality;
             existingMovie.Language = movieToAddDTOs.Language;
             existingMovie.Block = movieToAddDTOs.Block;
             existingMovie.NameDirector = movieToAddDTOs.NameDirector;
             existingMovie.IsVip = movieToAddDTOs.IsVip;
-            existingMovie.View = movieToAddDTOs.View;
             existingMovie.Image = movieToAddDTOs.Image;
             existingMovie.BackgroundImage = movieToAddDTOs.BackgroundImage;
 
@@ -607,19 +758,29 @@ namespace DoAnTotNghiep.Repository
                     m.""Quality"", 
                     m.""Language"", 
                     m.""View"", 
+                    m.""IsVip"",
+                    m.""Block"",
+                    m.""NameDirector"",
                     m.""Image"", 
                     m.""BackgroundImage"",
+                    m.""Point"",
+                    lm.""Episode"",
+                    lm.""CreatedAt"",
                     COALESCE(STRING_AGG(DISTINCT c.""NameCategories"", ', '), '') AS ""NameCategories"",
                     COALESCE(STRING_AGG(DISTINCT a.""ActorName"", ', '), '') AS ""NameActors"",
                     COALESCE(STRING_AGG(DISTINCT lm.""UrlMovie"" || '-Tap-' || lm.""Episode"", ', '), '') AS ""UrlMovie""
                     FROM ""Movie"" m
                 LEFT JOIN ""SubCategories"" sc ON m.""Id"" = sc.""IdMovie""
                 LEFT JOIN ""Category"" c ON sc.""IdCategory"" = c.""IdCategories""
-                LEFT JOIN ""LinkMovie"" lm ON m.""Id"" = lm.""IdMovie""
+                LEFT JOIN (
+                    SELECT DISTINCT ON (""IdMovie"") ""IdMovie"", ""Episode"", ""CreatedAt"", ""UrlMovie""
+                    FROM ""LinkMovie""
+                    ORDER BY ""IdMovie"", ""CreatedAt"" DESC
+                ) lm ON m.""Id"" = lm.""IdMovie""
                 LEFT JOIN ""SubActor"" sa ON m.""Id"" = sa.""IdMovie""
                 LEFT JOIN ""Actor"" a ON sa.""IdActor"" = a.""IdActor""
-                WHERE m.""SlugNation"" =  @slugNation 
-                GROUP BY m.""Id"";";
+                WHERE m.""SlugNation"" =  @slugNation AND m.""Block"" = false
+                GROUP BY m.""Id"", lm.""UrlMovie"", lm.""Episode"", lm.""CreatedAt"";";
 
             return await _databaseContext.Database
         .SqlQueryRaw<MovieToShowDTOs>(sql, new[] { new NpgsqlParameter("@slugNation", slugNation) })
@@ -651,18 +812,28 @@ namespace DoAnTotNghiep.Repository
                             m.""Language"", 
                             m.""View"", 
                             m.""Image"",
+                            m.""IsVip"",
+                            m.""Block"",
+                            m.""NameDirector"",
                             m.""BackgroundImage"",
+                            m.""Point"",
+                            lm.""Episode"",
+                            lm.""CreatedAt"",
                             COALESCE(STRING_AGG(DISTINCT c.""NameCategories"", ', '), '') AS ""NameCategories"",
                             COALESCE(STRING_AGG(DISTINCT a.""ActorName"", ', '), '') AS ""NameActors"",
                             COALESCE(STRING_AGG(DISTINCT lm.""UrlMovie"" || '-Tap-' || lm.""Episode"", ', '), '') AS ""UrlMovie""
                         FROM ""Movie"" m
                         LEFT JOIN ""SubCategories"" sc ON m.""Id"" = sc.""IdMovie""
                         LEFT JOIN ""Category"" c ON sc.""IdCategory"" = c.""IdCategories""
-                        LEFT JOIN ""LinkMovie"" lm ON m.""Id"" = lm.""IdMovie""
+                        LEFT JOIN (
+                            SELECT DISTINCT ON (""IdMovie"") ""IdMovie"", ""Episode"", ""CreatedAt"", ""UrlMovie""
+                            FROM ""LinkMovie""
+                            ORDER BY ""IdMovie"", ""CreatedAt"" DESC
+                        ) lm ON m.""Id"" = lm.""IdMovie""
                         LEFT JOIN ""SubActor"" sa ON m.""Id"" = sa.""IdMovie""
                         LEFT JOIN ""Actor"" a ON sa.""IdActor"" = a.""IdActor""
-                        WHERE m.""Status"" ILIKE '%' || @statusValue || '%'
-                        GROUP BY m.""Id"";";
+                        WHERE m.""Status"" ILIKE '%' || @statusValue || '%' AND m.""Block"" = false
+                        GROUP BY m.""Id"", lm.""UrlMovie"", lm.""Episode"", lm.""CreatedAt"";";
                 return await _databaseContext.Database
                    .SqlQueryRaw<MovieToShowDTOs>(sql, new[] { new NpgsqlParameter("@statusValue", (foundPair.Key).ToString()) })
                        .ToListAsync();
@@ -697,17 +868,25 @@ namespace DoAnTotNghiep.Repository
                     m.""View"", 
                     m.""Image"",
                     m.""BackgroundImage"",
+                    m.""Point"",
+                    lm.""Episode"",
+                    lm.""CreatedAt"",
                     COALESCE(STRING_AGG(DISTINCT c.""NameCategories"", ', '), '') AS ""NameCategories"",
                     COALESCE(STRING_AGG(DISTINCT a.""ActorName"", ', '), '') AS ""NameActors"",
                     COALESCE(STRING_AGG(DISTINCT lm.""UrlMovie"" || '-Tap-' || lm.""Episode"", ', '), '') AS ""UrlMovie""
                 FROM ""Movie"" m
                 LEFT JOIN ""SubCategories"" sc ON m.""Id"" = sc.""IdMovie""
                 LEFT JOIN ""Category"" c ON sc.""IdCategory"" = c.""IdCategories""
-                LEFT JOIN ""LinkMovie"" lm ON m.""Id"" = lm.""IdMovie""
+                LEFT JOIN (
+                            SELECT DISTINCT ON (""IdMovie"") ""IdMovie"", ""Episode"", ""CreatedAt"", ""UrlMovie""
+                            FROM ""LinkMovie""
+                            ORDER BY ""IdMovie"", ""CreatedAt"" DESC
+                        ) lm ON m.""Id"" = lm.""IdMovie""
                 LEFT JOIN ""SubActor"" sa ON m.""Id"" = sa.""IdMovie""
                 LEFT JOIN ""Actor"" a ON sa.""IdActor"" = a.""IdActor""
                 WHERE m.""Id"" IN (SELECT ""Id"" FROM ActorFiltered)
-                GROUP BY m.""Id"";";
+                AND m.""Block"" = false
+                GROUP BY m.""Id"", lm.""UrlMovie"", lm.""Episode"", lm.""CreatedAt"";";
 
             return await _databaseContext.Database
         .SqlQueryRaw<MovieToShowDTOs>(sql, new[] { new NpgsqlParameter("@actor", actor) })

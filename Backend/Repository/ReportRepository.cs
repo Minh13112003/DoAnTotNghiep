@@ -3,6 +3,7 @@ using DoAnTotNghiep.DTOs;
 using DoAnTotNghiep.Helper.DateTimeVietNam;
 using DoAnTotNghiep.Model;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 
 namespace DoAnTotNghiep.Repository
@@ -31,21 +32,28 @@ namespace DoAnTotNghiep.Repository
 
         public async Task<List<ReportToShowDTOs>> GetReportAdmin(string UserNameAdminFix)
         {
-            return await _databaseContext.Reports
-                .Where(r => r.Status == 0 || (r.Status == 1 && r.UserNameAdminFix == UserNameAdminFix))
-                .Select(r => new ReportToShowDTOs
-                {
-                    IdReport = r.IdReport,
-                    IdMovie = r.IdMovie,
-                    UserNameReporter = r.UserNameReporter,
-                    Content = r.Content,
-                    UserNameAdminFix = r.UserNameAdminFix,
-                    Response = r.Response,
-                    TimeReport = r.TimeReport,
-                    TimeResponse = r.TimeResponse,
-                    Status = r.Status
-                })
-                .ToListAsync();
+
+            var sql = @"
+                SELECT 
+                    r.""IdReport"",
+                    r.""IdMovie"",
+                    r.""IdComment"",
+                    r.""UserNameReporter"",
+                    r.""Content"",
+                    r.""UserNameAdminFix"",
+                    r.""Response"",
+                    r.""TimeReport"",
+                    r.""TimeResponse"",
+                    r.""Status"",
+                    c.""IdUserName"" AS ""NameOfUserReported"",
+                    c.""Content"" AS ""ContentCommentReported""
+                FROM ""Report"" r
+                LEFT JOIN ""Comment"" c ON r.""IdComment"" = c.""IdComment""
+                WHERE r.""Status"" = 0 OR (r.""Status"" = 1 AND r.""UserNameAdminFix"" = @usernameadminfix);
+            ";
+            return await _databaseContext.Database
+        .SqlQueryRaw<ReportToShowDTOs>(sql, new[] { new NpgsqlParameter("@usernameadminfix", UserNameAdminFix) })
+            .ToListAsync();
         }
 
         public async Task<List<ReportToShowDTOs>> GetSelfReport(string UserNameReporter)
@@ -105,9 +113,9 @@ namespace DoAnTotNghiep.Repository
 
         public async Task<bool> UpReport(string UserNameReporter, UpReportDTOs upReportDTOs)
         {
-            if (!string.IsNullOrEmpty(upReportDTOs.Content))
+            if (!string.IsNullOrEmpty(upReportDTOs.Content) && !string.Equals(upReportDTOs.Content, "string", StringComparison.OrdinalIgnoreCase))
             {
-                if (!string.IsNullOrEmpty(upReportDTOs.SlugMovie))
+                if (!string.IsNullOrWhiteSpace(upReportDTOs.SlugMovie) && !string.Equals(upReportDTOs.SlugMovie, "string", StringComparison.OrdinalIgnoreCase))
                 {
 
                     var movie = await _databaseContext.Movies.FirstOrDefaultAsync(i => i.SlugTitle == upReportDTOs.SlugMovie);   
@@ -124,6 +132,22 @@ namespace DoAnTotNghiep.Repository
                     await _databaseContext.Reports.AddAsync(report);
                     await _databaseContext.SaveChangesAsync();
                     return true;
+                }
+                else if (!string.IsNullOrWhiteSpace(upReportDTOs.IdComment) && !string.Equals(upReportDTOs.IdComment, "string", StringComparison.OrdinalIgnoreCase))
+                {
+                    var UserNameReported = await _databaseContext.Comments.FirstOrDefaultAsync(i => i.IdComment == upReportDTOs.IdComment);
+                    if(UserNameReporter == UserNameReported.IdUserName) throw new InvalidOperationException("Bạn không thể tự báo cáo chính mình.");
+                    var report = new Report
+                    {
+                        IdReport = Guid.NewGuid().ToString(),
+                        IdComment = upReportDTOs.IdComment,
+                        UserNameReporter = UserNameReporter,
+                        Content = upReportDTOs.Content,
+                        Status = 0,
+                        TimeReport= DateTimeHelper.GetdateTimeVNNow()
+                    };
+                    await _databaseContext.Reports.AddAsync(report);
+                    await _databaseContext.SaveChangesAsync();
                 }
                 else
                 {

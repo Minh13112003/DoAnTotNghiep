@@ -22,35 +22,6 @@ namespace DoAnTotNghiep.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("DoAnTotNghiep.Model.Account", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<int>("Age")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("VARCHAR(255)");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("VARCHAR(255)");
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("VARCHAR(255)");
-
-                    b.Property<string>("UserName")
-                        .IsRequired()
-                        .HasColumnType("VARCHAR(255)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Account", (string)null);
-                });
-
             modelBuilder.Entity("DoAnTotNghiep.Model.Actor", b =>
                 {
                     b.Property<string>("IdActor")
@@ -107,13 +78,13 @@ namespace DoAnTotNghiep.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "12a39b47-ed61-4ab2-9716-c859cd41f60d",
+                            Id = "2daf2c24-fed1-4cc1-9a51-22981c29ecb8",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "51c47711-4215-4f49-9746-d3fee8b8239a",
+                            Id = "196ceb68-0d32-483b-9aa7-17a0fb47340b",
                             Name = "User",
                             NormalizedName = "USER"
                         });
@@ -141,6 +112,12 @@ namespace DoAnTotNghiep.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("FavoriteSlugTitle")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsVip")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
 
@@ -155,6 +132,12 @@ namespace DoAnTotNghiep.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<string>("OTP")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("OtpCreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("PasswordHash")
                         .HasColumnType("text");
 
@@ -163,6 +146,12 @@ namespace DoAnTotNghiep.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("RefreshTokenExpiryTime")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
@@ -240,11 +229,28 @@ namespace DoAnTotNghiep.Migrations
                     b.ToTable("Comment", (string)null);
                 });
 
+            modelBuilder.Entity("DoAnTotNghiep.Model.History", b =>
+                {
+                    b.Property<string>("IdMovie")
+                        .HasColumnType("VARCHAR(50)");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("text");
+
+                    b.HasKey("IdMovie", "UserName");
+
+                    b.ToTable("History", (string)null);
+                });
+
             modelBuilder.Entity("DoAnTotNghiep.Model.LinkMovie", b =>
                 {
                     b.Property<string>("IdLinkMovie")
                         .HasColumnType("VARCHAR(50)")
                         .HasColumnName("IdLinkMovie");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("CreatedAt");
 
                     b.Property<int>("Episode")
                         .HasColumnType("integer")
@@ -319,6 +325,10 @@ namespace DoAnTotNghiep.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("NumberOfMovie");
 
+                    b.Property<decimal>("Point")
+                        .HasColumnType("decimal(2,1)")
+                        .HasColumnName("Point");
+
                     b.Property<string>("Quality")
                         .IsRequired()
                         .HasColumnType("VARCHAR(50)")
@@ -363,6 +373,23 @@ namespace DoAnTotNghiep.Migrations
                     b.ToTable("Movie", (string)null);
                 });
 
+            modelBuilder.Entity("DoAnTotNghiep.Model.MovieRating", b =>
+                {
+                    b.Property<string>("IdMovie")
+                        .HasColumnType("VARCHAR(50)");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("text");
+
+                    b.Property<int>("RatePoint")
+                        .HasColumnType("integer")
+                        .HasColumnName("RatePoint");
+
+                    b.HasKey("IdMovie", "UserName");
+
+                    b.ToTable("MovieRating", (string)null);
+                });
+
             modelBuilder.Entity("DoAnTotNghiep.Model.Report", b =>
                 {
                     b.Property<string>("IdReport")
@@ -373,6 +400,10 @@ namespace DoAnTotNghiep.Migrations
                         .IsRequired()
                         .HasColumnType("VARCHAR(250)")
                         .HasColumnName("Content");
+
+                    b.Property<string>("IdComment")
+                        .HasColumnType("VARCHAR(50)")
+                        .HasColumnName("IdComment");
 
                     b.Property<string>("IdMovie")
                         .HasColumnType("VARCHAR(50)")
@@ -563,6 +594,17 @@ namespace DoAnTotNghiep.Migrations
                     b.Navigation("Movie");
                 });
 
+            modelBuilder.Entity("DoAnTotNghiep.Model.History", b =>
+                {
+                    b.HasOne("DoAnTotNghiep.Model.Movie", "Movie")
+                        .WithMany("History")
+                        .HasForeignKey("IdMovie")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Movie");
+                });
+
             modelBuilder.Entity("DoAnTotNghiep.Model.LinkMovie", b =>
                 {
                     b.HasOne("DoAnTotNghiep.Model.Movie", "Movie")
@@ -574,11 +616,23 @@ namespace DoAnTotNghiep.Migrations
                     b.Navigation("Movie");
                 });
 
+            modelBuilder.Entity("DoAnTotNghiep.Model.MovieRating", b =>
+                {
+                    b.HasOne("DoAnTotNghiep.Model.Movie", "Movie")
+                        .WithMany("MovieRating")
+                        .HasForeignKey("IdMovie")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Movie");
+                });
+
             modelBuilder.Entity("DoAnTotNghiep.Model.Report", b =>
                 {
                     b.HasOne("DoAnTotNghiep.Model.Movie", "Movie")
                         .WithMany("Reports")
-                        .HasForeignKey("IdMovie");
+                        .HasForeignKey("IdMovie")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("DoAnTotNghiep.Model.AppUser", "User")
                         .WithMany()
@@ -692,7 +746,11 @@ namespace DoAnTotNghiep.Migrations
                 {
                     b.Navigation("Comments");
 
+                    b.Navigation("History");
+
                     b.Navigation("LinkMovies");
+
+                    b.Navigation("MovieRating");
 
                     b.Navigation("Reports");
 

@@ -20,9 +20,9 @@ namespace DoAnTotNghiep.Services
             return await _repository.CreateSubCategory(IdMovie, IdCategory);
         }
 
-        public async Task<List<MovieToShowDTOs>> GetAllMovie()
+        public async Task<List<MovieToShowDTOs>> GetAllMovie(string role)
         {
-            return await _repository.GetAllMovie();
+            return await _repository.GetAllMovie(role);
         }
 
         public async Task<List<MovieToShowDTOs>> GetMovieByCategory(string category)
@@ -49,9 +49,9 @@ namespace DoAnTotNghiep.Services
             return await _repository.DeleteMovie(IdMovie);
         }
 
-        public async Task<List<MovieToShowDTOs>> SearchMovie(string? Keyword)
+        public async Task<List<MovieToShowDTOs>> SearchMovie(string? Keyword, string role)
         {
-            return await _repository.SearchMovie(Keyword);
+            return await _repository.SearchMovie(Keyword, role);
         }
 
         public async Task<List<MovieToShowDTOs>> GetMovieByNation(string nation)
@@ -67,6 +67,11 @@ namespace DoAnTotNghiep.Services
         public async Task<List<MovieToShowDTOs>> GetMovieByActor(string actor)
         {
             return await _repository.GetMovieByActor(actor);
+        }
+
+        public async Task<List<MovieToShowDTOs>> GetMovieById(string id)
+        {
+            return await _repository.GetMovieById(id);
         }
     }
 }

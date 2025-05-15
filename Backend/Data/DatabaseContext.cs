@@ -9,11 +9,7 @@ namespace DoAnTotNghiep.Data
 {
     public class DatabaseContext: IdentityDbContext<AppUser, AppRole, string>
     {
-        public DatabaseContext(DbContextOptions<DatabaseContext> dbContextOptions) : base(dbContextOptions) { }
-        /*  protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(Program).Assembly);
-        }*/
+        public DatabaseContext(DbContextOptions<DatabaseContext> dbContextOptions) : base(dbContextOptions) { }      
 
         public DbSet<Movie> Movies { get; set; } 
         public DbSet<Comment> Comments { get; set; } 
@@ -23,17 +19,14 @@ namespace DoAnTotNghiep.Data
         public DbSet<Report> Reports { get; set; }
         public DbSet<SubActor> SubActors { get; set; }
         public DbSet<Actor> Actors { get; set; }
+        public DbSet<MovieRating> MovieRatings { get; set; }
+        public DbSet<History> History { get; set; }
+        
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            // Cấu hình Identity mặc định
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(Program).Assembly);
-
-            // Cấu hình thực thể Account (không cần DbSet)
-            modelBuilder.ApplyConfiguration(new AccountEntitiesConfig());
-
+            
             modelBuilder.Entity<Movie>(b =>
             {
                 b.ToTable("Movie");
@@ -57,6 +50,7 @@ namespace DoAnTotNghiep.Data
                 b.Property(m => m.IsVip).HasColumnName("IsVip").IsRequired(true);
                 b.Property(m => m.Language).HasColumnName("Language").HasColumnType("VARCHAR(50)"); // Ví dụ: nvarchar(50)
                 b.Property(m => m.View).HasColumnName("View");
+                b.Property(m => m.Point).HasColumnName("Point").HasColumnType("decimal(2,1)");
                 
             });
 
@@ -69,6 +63,7 @@ namespace DoAnTotNghiep.Data
                 b.Property(m => m.IdUserName).HasColumnName("IdUserName").HasColumnType("VARCHAR(50)");
                 b.Property(m => m.Content).HasColumnName("Content").HasColumnType("VARCHAR(400)");
                 b.Property(m => m.TimeComment).HasColumnName("TimeComment").HasColumnType("VARCHAR(150)");
+                
 
                 b.HasOne(c => c.Movie) 
                         .WithMany(m => m.Comments) 
@@ -83,7 +78,11 @@ namespace DoAnTotNghiep.Data
                 b.Property(m => m.IdMovie).HasColumnName("IdMovie").HasColumnType("VARCHAR(50)").IsRequired();
                 b.Property(m => m.Episode).HasColumnName("Episode");
                 b.Property(m => m.UrlMovie).HasColumnName("UrlMovie").HasColumnType("VARCHAR(400)").IsRequired();
-                
+                b.Property(m => m.CreatedAt)
+                 .HasColumnName("CreatedAt")
+                 .HasColumnType("TIMESTAMP")
+                 .IsRequired();
+                b.HasIndex(m => m.UrlMovie).IsUnique();
                 b.HasOne(c => c.Movie)
                 .WithMany(m => m.LinkMovies)
                 .HasForeignKey( c => c.IdMovie)
@@ -136,6 +135,7 @@ namespace DoAnTotNghiep.Data
                 a.Property(r => r.BirthDay).HasColumnName("Birthday").HasColumnType("VARCHAR(50)").IsRequired(false);
                 a.Property(r => r.UrlImage).HasColumnName("UrlImage").HasColumnType("VARCHAR(200)");
                 a.Property(r => r.SlugActorName).HasColumnName("SlugActorName").HasColumnType("VARCHAR(350)").IsRequired(false);
+                
             });
             modelBuilder.Entity<Report>(b =>
             {
@@ -150,29 +150,50 @@ namespace DoAnTotNghiep.Data
                 b.Property(r => r.TimeReport).HasColumnName("TimeReport").HasColumnType("VARCHAR(50)").IsRequired(true);
                 b.Property(r => r.TimeResponse).HasColumnName("TimeResponse").HasColumnType("VARCHAR(50)").IsRequired(false);
                 b.Property(r => r.Status).HasColumnName("Status").IsRequired(true);
+                b.Property(r => r.IdComment).HasColumnName("IdComment").HasColumnType("VARCHAR(50)").IsRequired(false);
 
                 b.HasOne(r => r.Movie)
                     .WithMany(b => b.Reports)
                     .HasForeignKey(r => r.IdMovie)
-                    .IsRequired(false);
+                    .IsRequired(false)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                
+
             });
-               
-          
+            modelBuilder.Entity<History>(b =>
+            {
+                b.ToTable("History");
+                b.HasKey(mt => new { mt.IdMovie, mt.UserName });
+                b.HasOne(r => r.Movie)
+                    .WithMany(b => b.History)
+                    .HasForeignKey(r => r.IdMovie)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<MovieRating>(m =>
+            {
+                m.ToTable("MovieRating");
+                m.HasKey(mt => new {mt.IdMovie, mt.UserName});
+                m.Property(r =>r.RatePoint).HasColumnName("RatePoint").IsRequired(true);
+                m.HasOne(r => r.Movie)
+                   .WithMany(b => b.MovieRating)
+                   .HasForeignKey(r => r.IdMovie)
+                   .OnDelete(DeleteBehavior.Cascade);
+            });
             
-
+            
             List<AppRole> roles = new List<AppRole>
             {
                 new AppRole
                 {
+                    Id = "2daf2c24-fed1-4cc1-9a51-22981c29ecb8",
                     Name = "Admin",
                     NormalizedName = "ADMIN",
                 },
                 new AppRole
                 {
+                    Id = "196ceb68-0d32-483b-9aa7-17a0fb47340b",
                     Name = "User",
-                    NormalizedName = "USER",
+                    NormalizedName = "USER"
                 },
 
             };

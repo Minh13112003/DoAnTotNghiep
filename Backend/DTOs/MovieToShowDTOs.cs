@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using DoAnTotNghiep.Helper.DateTimeVietNam;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace DoAnTotNghiep.DTOs
@@ -19,12 +20,19 @@ namespace DoAnTotNghiep.DTOs
         public string Language { get; set; } = string.Empty;
         public int View { get; set; }
         public bool Block { get; set; } = false;
-        public string NameDirector { get; set; } = string.Empty;
-        public string NameActors {  get; set; } = string.Empty;
+        public string? NameDirector { get; set; } = string.Empty;
+        public string? NameActors {  get; set; } = string.Empty;
         public bool IsVip { get; set; } = false;
-        public string UrlMovie { get; set; } = string.Empty;
-        public string Image { get; set; } = string.Empty;
-        public string BackgroundImage { get; set; } = string.Empty;
+        public string? UrlMovie { get; set; } = string.Empty;
+        public string? Image { get; set; } = string.Empty;
+        public string? BackgroundImage { get; set; } = string.Empty;
+        public decimal Point {  get; set; }
+        public int? Episode { get; set; }
+        [JsonIgnore]
+        public DateTime? CreatedAt { get; set; }
+        [NotMapped]
+
+        public string? CreatedAtString => CreatedAt.HasValue ? DateTimeHelper.ToStringDateTime(CreatedAt.Value) : null;
         [NotMapped]
         public string StatusText => MovieStatusDict.TryGetValue(int.Parse(Status), out var statusText) ? statusText : "Không xác định";
 

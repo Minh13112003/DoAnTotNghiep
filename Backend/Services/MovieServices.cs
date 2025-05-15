@@ -12,6 +12,12 @@ namespace DoAnTotNghiep.Services
         {
            _movieRepository = movieRepository;
         }
+
+        public async Task<bool> AddHistoryMovie(string IdMovie, string UserName)
+        {
+           return await _movieRepository.AddHistoryMovie(IdMovie, UserName);
+        }
+
         public async Task<bool> AddMovie(MovieDTOs movieDTOs)
         {
             return await _movieRepository.AddMovie(movieDTOs);
@@ -27,24 +33,31 @@ namespace DoAnTotNghiep.Services
             return await _movieRepository.GetAllMovie();
         }
 
-        /*public async Task<List<Movie>> GetMovieByCategory(string categoryName)
+        public async Task<List<MovieToShowDTOs>> GetFavoriteMoviesBySlugTitlesAsync(List<string> slugTitles)
         {
-            return await _movieRepository.GetMovieByCategory(categoryName);
-        }*/
-
-        public async Task<List<Movie>> GetMovieByName(string movieName)
-        {
-            return await _movieRepository.GetMovieByName(movieName);
+            return await _movieRepository.GetFavoriteMoviesBySlugTitlesAsync(slugTitles);
         }
 
-        public async Task<List<Movie>> GetMovieByType(string typeName)
+        public async Task<List<MovieToShowDTOs>> GetHistoryMovie(string UserName)
         {
-            return await _movieRepository.GetMovieByType(typeName);
+            return await _movieRepository.GetHistoryMovie(UserName);
         }
+
+        public async Task<List<MovieToShowDTOs>> GetNewestMovie()
+        {
+            return await _movieRepository.GetNewestMovie();
+        }
+
+        public async Task<bool> IncreaseMovieView(string titleSlug)
+        {
+            return await _movieRepository.IncreaseMovieView(titleSlug);
+        }
+
 
         public async Task<bool> UpdateMovie(MovieDTOs movieDTOs, string Idmovie)
         {
             return await _movieRepository.UpdateMovie(movieDTOs, Idmovie);
         }
+
     }
 }

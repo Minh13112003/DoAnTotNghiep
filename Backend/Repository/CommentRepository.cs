@@ -59,14 +59,15 @@ namespace DoAnTotNghiep.Repository
                 .ToListAsync();
         }
 
-        public async Task<bool> UpdateComment(CommentUpdateDTOs commentDTOs)
+        public async Task<bool> UpdateComment(string username,CommentUpdateDTOs commentDTOs)
         {
-            if (!String.IsNullOrEmpty(commentDTOs.IdUserName))
+            if (!string.IsNullOrEmpty(username))
             {
-                var comment = await _dbContext.Comments.FirstOrDefaultAsync(i => i.IdUserName ==  commentDTOs.IdUserName && i.IdComment == commentDTOs.IdComment);
+                var comment = await _dbContext.Comments.FirstOrDefaultAsync(i => i.IdUserName ==  username && i.IdComment == commentDTOs.IdComment);
                 if (comment == null) return false;
                 comment.Content = commentDTOs.Content;
                 comment.TimeComment = DateTimeHelper.GetdateTimeVNNow();
+                await _dbContext.SaveChangesAsync();
                 return true;
             }
             return false;
