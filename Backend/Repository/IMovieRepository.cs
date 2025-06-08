@@ -5,16 +5,26 @@ namespace DoAnTotNghiep.Repository
 {
     public interface IMovieRepository
     {
-        Task <bool> AddMovie(MovieDTOs movieDTOs);
-        Task<bool> UpdateMovie(MovieDTOs movieDTOs, string Idmovie);
-        Task<string> DeleteMovie(string movieId);
-        Task<List<Movie>> GetAllMovie();
         
-        Task<List<MovieToShowDTOs>> GetFavoriteMoviesBySlugTitlesAsync(List<string> slugTitles);
+        Task<PaginatedMoviesResultDTO> GetFavoriteMoviesBySlugTitlesAsync(List<string> slugTitles, int pageNumber, int pageSize);
 
         Task<bool> IncreaseMovieView(string titleSlug);
-        Task<List<MovieToShowDTOs>> GetNewestMovie();
+        Task<PaginatedMoviesResultDTO> GetNewestMovie(int pageNumber, int pageSize);
         Task<bool> AddHistoryMovie(string IdMovie, string UserName);
-        Task<List<MovieToShowDTOs>> GetHistoryMovie(string UserName);
+        Task<PaginatedMoviesResultDTO> GetHistoryMovie(string UserName, int pageNumber, int pageSize);
+        Task<PaginatedMoviesResultDTO> GetFilteredMovies(MovieFilterDto filter, int pageNumber, int pageSize);
+        Task<PaginatedMoviesResultDTO> GetAllMovie(string role, int pageNumber, int pageSize);
+        Task<bool> CreateSubCategory(string IdMovie, string IdCategory);
+        Task<List<MovieToShowDTOs>> GetMovieByTitleSlug(string titleSlug);
+        Task<PaginatedMoviesResultDTO> GetMovieByType(string slugtype, int pageNumber, int pageSize);
+        Task<bool> DeleteMovie(string IdMovie);
+        Task<bool> AddMovie(MovieToAddDTOs movieToAddDTOs);
+        Task<PaginatedMoviesResultDTO> GetMovieByCategory(string category, int pageNumber, int pageSize);
+        Task<bool> UpdateMovie(MovieToUpdateDTOs movieToAddDTOs);
+        Task<PaginatedMoviesResultDTO> SearchMovie(string? keyword, string role, int pageNumber, int pageSize);
+        Task<PaginatedMoviesResultDTO> GetMovieByNation(string slugNation, int pageNumber, int pageSize);
+        Task<PaginatedMoviesResultDTO> GetMovieByStatus(string status, int pageNumber, int pageSize);
+        Task<List<MovieToShowDTOs>> GetMovieByActor(string actor);
+        Task<List<MovieToShowDTOs>> GetMovieById(string id);
     }
 }

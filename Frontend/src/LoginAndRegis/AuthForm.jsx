@@ -1,10 +1,16 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import Navbar from '../Dashboard/Navbar';
 import { DataContext } from "../ContextAPI/ContextNavbar";
 import Footer from "../Dashboard/Footer";
 import { useNavigate } from 'react-router-dom';
+import { Login, Register } from "../apis/authAPI";
+import Cookies from 'js-cookie';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import './AuthForm.css';
+import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Thêm icon từ react-icons
 
 const AuthForm = () => {
   const navigate = useNavigate();
@@ -14,43 +20,38 @@ const AuthForm = () => {
     username: "",
     password: "",
     email: "",
-    age: "",
+    birthday: "",
     phonenumber: "",
     otp: ""
   });
-  const [errors, setErrors] = useState({}); // State để lưu các lỗi validation
-  const [message, setMessage] = useState({ type: "", content: "" }); // Thêm type để phân biệt success/error
+  const [errors, setErrors] = useState({});
+  const [message, setMessage] = useState({ type: "", content: "" });
   const [otp, setOtp] = useState("");
   const [countdown, setCountdown] = useState(0);
   const [canResendOTP, setCanResendOTP] = useState(true);
+  const [showPassword, setShowPassword] = useState(false); // State để toggle hiển thị mật khẩu
+  useEffect(() => {
+    Cookies.remove('accessToken');
+    Cookies.remove('refreshToken');
+    Cookies.remove('username');
+    localStorage.removeItem('userData');
+}, []);
 
   const validateForm = () => {
     const newErrors = {};
-
-    // Validate username
     if (!formData.username.trim()) {
       newErrors.username = "Vui lòng nhập tên đăng nhập";
     }
-
-    // Validate password
     if (!formData.password.trim()) {
       newErrors.password = "Vui lòng nhập mật khẩu";
     } else if (formData.password.length < 6) {
       newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự";
     }
-
-    // Validate additional fields for registration
     if (!isLogin) {
       if (!formData.email.trim()) {
         newErrors.email = "Vui lòng nhập email";
       } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
         newErrors.email = "Email không hợp lệ";
-      }
-
-      if (!formData.age) {
-        newErrors.age = "Vui lòng nhập tuổi";
-      } else if (formData.age < 1 || formData.age > 120) {
-        newErrors.age = "Tuổi không hợp lệ";
       }
       if (!formData.phonenumber.trim()) {
         newErrors.phoneNumber = "Vui lòng nhập số điện thoại";
@@ -58,24 +59,21 @@ const AuthForm = () => {
         newErrors.phoneNumber = "Số điện thoại không hợp lệ";
       }
     }
-
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // Return true if no errors
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors({ ...errors, [name]: "" });
     }
   };
 
   const startCountdown = () => {
-    setCountdown(300); // 5 phút = 300 giây
+    setCountdown(300);
     setCanResendOTP(false);
-    
     const timer = setInterval(() => {
       setCountdown((prevCount) => {
         if (prevCount <= 1) {
@@ -96,9 +94,8 @@ const AuthForm = () => {
       });
       return;
     }
-
     try {
-      const response = await axios.post(
+      await axios.post(
         `http://localhost:5285/api/account/SendOTP/${formData.username}`
       );
       setMessage({
@@ -117,15 +114,10 @@ const AuthForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage({ type: "", content: "" });
-
     if (!validateForm()) {
       return;
     }
-
     try {
-      const url = isLogin
-        ? "http://localhost:5285/api/account/login"
-        : "http://localhost:5285/api/account/register";
       const payload = isLogin
         ? { 
             username: formData.username, 
@@ -136,23 +128,20 @@ const AuthForm = () => {
             username: formData.username,
             password: formData.password,
             emailAddress: formData.email,
-            age: formData.age,
+            birthday: formData.birthday,
             phonenumber: formData.phonenumber
-          };
+          }; 
       
-      const response = await axios.post(url, payload);
+      const response = isLogin ? await Login(payload) : await Register(payload);
       
       if (isLogin) {
-        const { token, ...userData } = response.data; // Tách token ra khỏi userData
-        
+        const { token, refreshToken, userName, ...userData } = response.data;
         if (token) {
-          // Lưu token
-          localStorage.setItem('userToken', token);
-          
-          // Lưu thông tin user (email, userName, roles)
+          Cookies.set('accessToken', token, { expires: 30 });
+          Cookies.set('refreshToken', refreshToken, { expires: 7 });
+          Cookies.set('username', userName, { expires: 7 });
           localStorage.setItem('userData', JSON.stringify({
             email: userData.email,
-            userName: userData.userName,
             roles: userData.roles
           }));
           
@@ -160,12 +149,9 @@ const AuthForm = () => {
             type: "success",
             content: "Đăng nhập thành công!"
           });
-
-          // Chuyển hướng sau khi đăng nhập thành công
           navigate('/');
         }
       } else {
-        // Xử lý đăng ký
         setMessage({
           type: "success",
           content: "Đăng ký thành công! Vui lòng đăng nhập."
@@ -176,14 +162,13 @@ const AuthForm = () => {
             username: "",
             password: "",
             email: "",
-            age: "",
+            birthday: "",
             phonenumber: "0",
             otp: ""
           });
         }, 1000);
       }
     } catch (error) {
-      console.log('Error response:', error.response);
       const errorMessage = error.response?.data?.message || 
         (isLogin ? "Sai tài khoản, mật khẩu hoặc mã OTP" : "Đăng ký không thành công");
       
@@ -194,17 +179,33 @@ const AuthForm = () => {
     }
   };
 
+  const handleDateChange = (date) => {
+    setFormData({ ...formData, birthday: date });
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('userToken');
     localStorage.removeItem('userData');
     navigate('/tai-khoan/auth');
   };
 
+  // Xử lý sự kiện nhấn Enter
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSubmit(e);
+    }
+  };
+
+  // Toggle hiển thị mật khẩu
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
     <div style={{ 
       display: 'flex', 
       flexDirection: 'column',
-      minHeight: '100vh' // Đảm bảo trang có chiều cao tối thiểu là 100% viewport
+      minHeight: '100vh'
     }}>
       <Navbar categories={categories} movieTypes={movieTypes} nations={nations} statuses={statuses} statusMap={statusMap} />
       
@@ -216,7 +217,7 @@ const AuthForm = () => {
                 <h3>{isLogin ? "Đăng nhập" : "Đăng ký"}</h3>
               </div>
               <div className="card-body">
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} onKeyPress={handleKeyPress}>
                   <div className="mb-3 row align-items-center">
                     <label className="col-sm-3 col-form-label">Username:</label>
                     <div className="col-sm-9">
@@ -251,17 +252,21 @@ const AuthForm = () => {
                         </div>
                       </div>
                       <div className="mb-3 row align-items-center">
-                        <label className="col-sm-3 col-form-label">Age:</label>
+                        <label className="col-sm-3 col-form-label">Ngày sinh:</label>
                         <div className="col-sm-9">
-                          <input
-                            type="number"
-                            className={`form-control ${errors.age ? 'is-invalid' : ''}`}
-                            name="age"
-                            value={formData.age}
-                            onChange={handleChange}
+                          <DatePicker
+                            selected={formData.birthday}
+                            onChange={(date) => handleDateChange(date)}
+                            dateFormat="yyyy-MM-dd"
+                            className={`form-control ${errors.birthday ? 'is-invalid' : ''}`}
+                            showYearDropdown
+                            scrollableYearDropdown
+                            yearDropdownItemNumber={100}
+                            maxDate={new Date()}
+                            placeholderText="Chọn ngày sinh"
                           />
-                          {errors.age && (
-                            <div className="invalid-feedback">{errors.age}</div>
+                          {errors.birthday && (
+                            <div className="invalid-feedback">{errors.birthday}</div>
                           )}
                         </div>
                       </div>
@@ -285,14 +290,21 @@ const AuthForm = () => {
 
                   <div className="mb-4 row align-items-center">
                     <label className="col-sm-3 col-form-label">Password:</label>
-                    <div className="col-sm-9">
+                    <div className="col-sm-9 position-relative">
                       <input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         className={`form-control ${errors.password ? 'is-invalid' : ''}`}
                         name="password"
                         value={formData.password}
                         onChange={handleChange}
                       />
+                      <span 
+                        className="position-absolute end-0 top-50 translate-middle-y pe-3"
+                        style={{ cursor: 'pointer' }}
+                        onClick={togglePasswordVisibility}
+                      >
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                      </span>
                       {errors.password && (
                         <div className="invalid-feedback">{errors.password}</div>
                       )}
@@ -362,6 +374,16 @@ const AuthForm = () => {
                     }}
                   >
                     {isLogin ? "Đăng ký ngay" : "Đăng nhập"}
+                  </button>
+                </div>
+                <div className="mt-3 d-flex justify-content-center align-items-center gap-2">
+                  <button
+                    className="btn btn-link p-0"
+                    onClick={() => {
+                      navigate('/quen-mat-khau');
+                    }}
+                  >
+                    Quên mật khẩu
                   </button>
                 </div>
               </div>

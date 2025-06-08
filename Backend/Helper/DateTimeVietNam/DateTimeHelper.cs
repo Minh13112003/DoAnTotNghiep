@@ -23,5 +23,12 @@
         {
             return vietnamTime.ToString("dd/MM/yyyy HH:mm:ss");
         }
+        public static int CalculateAge(DateTime birthday)
+        {
+            var today = DateTime.Today;
+            var age = today.Year - birthday.Year;
+            if (birthday.Date > today.AddYears(-age)) age--;  // nếu chưa đến sinh nhật trong năm nay thì trừ 1
+            return age;
+        }
     }
 }

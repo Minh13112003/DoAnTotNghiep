@@ -87,8 +87,6 @@ builder.Services.AddScoped<IMovieRepository, MovieRepository>();
 builder.Services.AddScoped<IMovieServices,  MovieServices>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ICategoryService, CategoryServices>();
-builder.Services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
-builder.Services.AddScoped<ISubCategoryServices, SubCategoryServices>();
 builder.Services.AddScoped<ILinkMovieRepository, LinkMovieRepository>();
 builder.Services.AddScoped<ILinkMovieServices, LinkMovieServices>();
 builder.Services.AddScoped<IMixAPIRepository, MixAPIRepository>();
@@ -103,6 +101,7 @@ builder.Services.AddScoped<IEmailAuthenticationServices, EmailAuthenticationServ
 builder.Services.AddScoped<IVnPayService, VnPayService>();
 builder.Services.AddScoped<IMovieRatingRepository, MovieRatingRepository>();
 builder.Services.AddScoped<IMovieRatingService, MovieRatingService>();
+builder.Services.AddScoped<IPayOsService, PayOsService>();
 
 
 builder.Services.AddControllers().AddJsonOptions(options =>

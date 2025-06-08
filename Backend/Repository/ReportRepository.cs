@@ -12,15 +12,17 @@ namespace DoAnTotNghiep.Repository
     {
         private readonly DatabaseContext _databaseContext;
 
-        public ReportRepository(DatabaseContext databaseContext) {
+        public ReportRepository(DatabaseContext databaseContext)
+        {
             _databaseContext = databaseContext;
         }
 
         public async Task<bool> DeleteReport(string IdReport)
         {
-            if(!string.IsNullOrEmpty(IdReport)){
+            if (!string.IsNullOrEmpty(IdReport))
+            {
                 var report = await _databaseContext.Reports.FirstOrDefaultAsync(i => i.IdReport == IdReport && (i.Status == 0 || i.Status == 2));
-                if (report != null) 
+                if (report != null)
                 {
                     _databaseContext.Reports.Remove(report);
                     await _databaseContext.SaveChangesAsync();
@@ -59,7 +61,7 @@ namespace DoAnTotNghiep.Repository
         public async Task<List<ReportToShowDTOs>> GetSelfReport(string UserNameReporter)
         {
             return await _databaseContext.Reports
-                .Where(r => r.UserNameReporter == UserNameReporter) 
+                .Where(r => r.UserNameReporter == UserNameReporter)
                 .Select(r => new ReportToShowDTOs
                 {
                     IdReport = r.IdReport,
@@ -95,13 +97,13 @@ namespace DoAnTotNghiep.Repository
 
         public async Task<bool> ResponseReport(string UserNameAdminFix, ResponseReport responseReport)
         {
-            if(responseReport.IdReport != null && UserNameAdminFix != null)
+            if (responseReport.IdReport != null && UserNameAdminFix != null)
             {
                 var report = await _databaseContext.Reports.FirstOrDefaultAsync(r => r.IdReport == responseReport.IdReport && r.UserNameAdminFix == UserNameAdminFix && r.Status == 1);
                 if (report != null)
                 {
                     report.Response = responseReport.Response;
-                    report.TimeResponse = DateTimeHelper.GetdateTimeVNNow();  
+                    report.TimeResponse = DateTimeHelper.GetdateTimeVNNow();
                     report.Status = 2;
                     await _databaseContext.SaveChangesAsync();
                     return true;
@@ -115,56 +117,52 @@ namespace DoAnTotNghiep.Repository
         {
             if (!string.IsNullOrEmpty(upReportDTOs.Content) && !string.Equals(upReportDTOs.Content, "string", StringComparison.OrdinalIgnoreCase))
             {
-                if (!string.IsNullOrWhiteSpace(upReportDTOs.SlugMovie) && !string.Equals(upReportDTOs.SlugMovie, "string", StringComparison.OrdinalIgnoreCase))
+                Report report = new Report
                 {
+                    IdReport = Guid.NewGuid().ToString(),
+                    UserNameReporter = UserNameReporter,
+                    Content = upReportDTOs.Content,
+                    Status = 0,
+                    TimeReport = DateTimeHelper.GetdateTimeVNNow()
+                };
 
-                    var movie = await _databaseContext.Movies.FirstOrDefaultAsync(i => i.SlugTitle == upReportDTOs.SlugMovie);   
-                    var report = new Report
-                    {
-                        IdReport = Guid.NewGuid().ToString(),
-                        UserNameReporter = UserNameReporter,
-                        IdMovie = movie?.IdMovie,
-                        Content = upReportDTOs.Content,
-                        Status = 0,
-                        TimeReport = DateTimeHelper.GetdateTimeVNNow()
-                    };
-
-                    await _databaseContext.Reports.AddAsync(report);
-                    await _databaseContext.SaveChangesAsync();
-                    return true;
-                }
-                else if (!string.IsNullOrWhiteSpace(upReportDTOs.IdComment) && !string.Equals(upReportDTOs.IdComment, "string", StringComparison.OrdinalIgnoreCase))
+                // Nếu có SlugMovie
+                if (!string.IsNullOrWhiteSpace(upReportDTOs.SlugMovie) &&
+                    !string.Equals(upReportDTOs.SlugMovie, "string", StringComparison.OrdinalIgnoreCase))
                 {
-                    var UserNameReported = await _databaseContext.Comments.FirstOrDefaultAsync(i => i.IdComment == upReportDTOs.IdComment);
-                    if(UserNameReporter == UserNameReported.IdUserName) throw new InvalidOperationException("Bạn không thể tự báo cáo chính mình.");
-                    var report = new Report
-                    {
-                        IdReport = Guid.NewGuid().ToString(),
-                        IdComment = upReportDTOs.IdComment,
-                        UserNameReporter = UserNameReporter,
-                        Content = upReportDTOs.Content,
-                        Status = 0,
-                        TimeReport= DateTimeHelper.GetdateTimeVNNow()
-                    };
-                    await _databaseContext.Reports.AddAsync(report);
-                    await _databaseContext.SaveChangesAsync();
-                }
-                else
-                {
-                    var report = new Report
-                    {
-                        IdReport = Guid.NewGuid().ToString(),
-                        UserNameReporter = UserNameReporter,
-                        Content = upReportDTOs.Content,
-                        Status = 0,
-                        TimeReport = DateTimeHelper.GetdateTimeVNNow()
-                    };
+                    var movie = await _databaseContext.Movies.FirstOrDefaultAsync(i => i.SlugTitle == upReportDTOs.SlugMovie);
 
-                    await _databaseContext.Reports.AddAsync(report);
-                    await _databaseContext.SaveChangesAsync();
-                    return true;
+                    if (movie != null)
+                    {
+                        report.IdMovie = movie.IdMovie;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
+
+                // Nếu có IdComment
+                if (!string.IsNullOrWhiteSpace(upReportDTOs.IdComment) &&
+                    !string.Equals(upReportDTOs.IdComment, "string", StringComparison.OrdinalIgnoreCase))
+                {
+                    var comment = await _databaseContext.Comments.FirstOrDefaultAsync(i => i.IdComment == upReportDTOs.IdComment);
+                    if (comment != null)
+                    {
+                        if (UserNameReporter == comment.IdUserName)
+                        {
+                            throw new InvalidOperationException("Bạn không thể tự báo cáo chính mình.");
+                        }
+
+                        report.IdComment = upReportDTOs.IdComment;
+                    }
+                }
+
+                await _databaseContext.Reports.AddAsync(report);
+                await _databaseContext.SaveChangesAsync();
+                return true;
             }
+
             return false;
         }
     }

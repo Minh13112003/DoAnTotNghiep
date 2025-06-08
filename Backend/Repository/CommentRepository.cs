@@ -41,6 +41,32 @@ namespace DoAnTotNghiep.Repository
             return true;
         }
 
+        public async Task<List<CommentToShowDTOs>> GetAllComment(string UserName)
+        {
+            var sql = @"
+                SELECT 
+                    cm.""IdComment"",
+                    cm.""IdMovie"", 
+                    cm.""IdUserName"", 
+                    cm.""Content"",
+                    cm.""TimeComment"",
+                    m.""Title"",
+                    CASE 
+                        WHEN r.""IdComment"" IS NOT NULL THEN CAST(1 AS bit)
+                        ELSE CAST(0 AS bit)
+                    END AS IsReported
+                FROM ""Comment"" cm
+                JOIN ""Movie"" m ON cm.""IdMovie"" = m.""Id""
+                LEFT JOIN ""Report"" r 
+                    ON cm.""IdComment"" = r.""IdComment""
+                    AND (r.""UserNameAdminFix"" = @username OR r.""Status"" = 0)
+            ";
+
+            return await _dbContext.Database
+         .SqlQueryRaw<CommentToShowDTOs>(sql, new NpgsqlParameter("@username", UserName))
+         .ToListAsync();
+        }
+
         public async Task<List<Comment>> GetCommentByMovie(string slugMovie)
         {
             var sql = @"
@@ -57,6 +83,11 @@ namespace DoAnTotNghiep.Repository
             return await _dbContext.Comments
                 .FromSqlRaw(sql, new NpgsqlParameter("@slugMovie", slugMovie))
                 .ToListAsync();
+        }
+
+        public Task<List<CommentToShowDTOs>> GetCommentReport(string UserName)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<bool> UpdateComment(string username,CommentUpdateDTOs commentDTOs)

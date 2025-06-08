@@ -9,5 +9,7 @@ namespace DoAnTotNghiep.Repository
         Task<List<Comment>>GetCommentByMovie(string slugMovie);
         Task<bool> UpdateComment(string username, CommentUpdateDTOs commentDTOs);
         Task<bool> DeleteComment(string role, string username, string Idcomment);
+        Task<List<CommentToShowDTOs>> GetAllComment(string UserName);
+        Task<List<CommentToShowDTOs>> GetCommentReport(string UserName);
     }
 }

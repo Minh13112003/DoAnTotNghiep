@@ -1,10 +1,7 @@
 ﻿using DoAnTotNghiep.DTOs;
-using DoAnTotNghiep.Model;
 using DoAnTotNghiep.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Net.WebSockets;
 
 namespace DoAnTotNghiep.Controllers
 {
@@ -32,7 +29,7 @@ namespace DoAnTotNghiep.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
-        [HttpPost("update")]
+        [HttpPut("update")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateCategory([FromBody] CategoryToUpdateDTOs category)
         {

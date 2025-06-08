@@ -88,3 +88,25 @@
 .dropdown-divider {
     margin: 4px 0;
 } 
+.search-container {
+    position: relative;
+    width: 400px;
+}
+
+.search-input {
+    padding-right: 40px !important; /* Đảm bảo có chỗ cho biểu tượng kính lúp */
+}
+
+.search-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #6c757d; /* Màu xám của Bootstrap */
+    font-size: 18px;
+}
+
+.search-icon:hover {
+    color: #000; /* Đổi màu khi hover */
+}

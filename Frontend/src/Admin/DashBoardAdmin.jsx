@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { DataContext } from '../ContextAPI/ContextNavbar';
 import Navbar from '../Dashboard/Navbar';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Card, Row, Col, Container, Button } from 'react-bootstrap';
+import { Card, Row, Col, Container, Button, ButtonGroup } from 'react-bootstrap';
 import { 
     FaFilm, FaList, FaUsers, FaAngleLeft, 
     FaAngleRight, FaArrowLeft, FaTachometerAlt,
@@ -11,6 +11,8 @@ import {
 import axios from 'axios';
 import Footer from '../Dashboard/Footer';
 import './AdminStyles.css';
+import { GetMovieRatePoint, GetDashBoardAdmin } from '../apis/mixAPI';
+import { slidebarMenus } from './slidebar';
 
 // Import Chart.js components
 import {
@@ -49,9 +51,15 @@ const DashBoardAdmin = () => {
         numberOfCategory: 0,
         numberOfComments: 0,
         numberOfFeedbacks: 0,
-        pendingFeedbacks: 0
+        pendingFeedbacks: 0,
+        statDay: [],
+        statMonth: [],
+        statYear: [],
+        listCategoryAndNumber: [],
+        listMovieStatus: []
     });
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [timeRange, setTimeRange] = useState('day'); // 'day', 'month', 'year'
     
     // Dữ liệu cho biểu đồ
     const [viewsData, setViewsData] = useState({
@@ -68,6 +76,11 @@ const DashBoardAdmin = () => {
         labels: [],
         datasets: []
     });
+    const [movieRatingData, setMovieRatingData] = useState({
+        labels: [],
+        datasets: []
+    });
+    const [sortType, setSortType] = useState('point'); // 'none', 'point', 'view'
 
     const sidebarMenus = [
             {
@@ -138,84 +151,203 @@ const DashBoardAdmin = () => {
                 ]
             }
         ];
+        
 
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const response = await axios.get('http://localhost:5285/api/movie/getNumberOfMovieAndCategory');
+                const response = await GetDashBoardAdmin();
                 setStats(response.data);
-                
-                // Giả lập dữ liệu biểu đồ (thay thế bằng dữ liệu thực từ API)
-                fetchChartData();
+                updateChartData(response.data, timeRange);
+                updateCategoryChart(response.data.listCategoryAndNumber);
+                updateStatusChart(response.data.listMovieStatus);
             } catch (error) {
                 console.error('Error fetching stats:', error);
             }
         };
         fetchStats();
-    }, []);
+        const fetchMovieRatings = async (sortType) => {
+            try {
+                const response = await GetMovieRatePoint(sortType); // Adjust URL as needed
+                updateMovieRatingChart(response.data, sortType);
+            } catch (error) {
+                console.error('Error fetching movie ratings:', error);
+            }
+        };
+        fetchMovieRatings(sortType);
+    }, [sortType]);
     
-    const fetchChartData = async () => {
-        try {
-            // Giả lập dữ liệu biểu đồ đường - lượt xem theo thời gian
-            const viewsChartData = {
-                labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
-                datasets: [
-                    {
-                        label: 'Lượt xem phim',
-                        data: [1200, 1900, 3000, 5000, 4000, 3500, 6500, 7800, 8500, 9200, 10000, 12000],
-                        borderColor: 'rgb(53, 162, 235)',
-                        backgroundColor: 'rgba(53, 162, 235, 0.5)',
-                        tension: 0.3,
-                    },
-                ],
-            };
-            setViewsData(viewsChartData);
-            
-            // Giả lập dữ liệu biểu đồ cột - số lượng phim theo thể loại
-            const categoryChartData = {
-                labels: ['Hành động', 'Tình cảm', 'Kinh dị', 'Hài hước', 'Khoa học viễn tưởng', 'Hoạt hình'],
-                datasets: [
-                    {
-                        label: 'Số lượng phim',
-                        data: [45, 38, 25, 42, 30, 35],
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.7)',
-                            'rgba(54, 162, 235, 0.7)',
-                            'rgba(255, 206, 86, 0.7)',
-                            'rgba(75, 192, 192, 0.7)',
-                            'rgba(153, 102, 255, 0.7)',
-                            'rgba(255, 159, 64, 0.7)',
-                        ],
-                    },
-                ],
-            };
-            setCategoryData(categoryChartData);
-            
-            // Giả lập dữ liệu biểu đồ tròn - tỉ lệ phim theo trạng thái
-            const statusChartData = {
-                labels: ['Đang chiếu', 'Sắp chiếu', 'Đã hoàn thành'],
-                datasets: [
-                    {
-                        label: 'Số lượng phim',
-                        data: [120, 45, 85],
-                        backgroundColor: [
-                            'rgba(54, 162, 235, 0.7)',
-                            'rgba(255, 206, 86, 0.7)',
-                            'rgba(75, 192, 192, 0.7)',
-                        ],
-                        borderColor: [
-                            'rgb(54, 162, 235)',
-                            'rgb(255, 206, 86)',
-                            'rgb(75, 192, 192)',
-                        ],
-                        borderWidth: 1,
-                    },
-                ],
-            };
-            setStatusData(statusChartData);
-            
-        } catch (error) {
-            console.error('Error fetching chart data:', error);
+    
+    
+    const updateChartData = (data, range) => {
+        let labels = [];
+        let viewCounts = [];
+
+        switch (range) {
+            case 'day':
+                labels = data.statDay.map(item => item.timePeriod);
+                viewCounts = data.statDay.map(item => item.viewCount);
+                break;
+            case 'month':
+                labels = data.statMonth.map(item => item.timePeriod);
+                viewCounts = data.statMonth.map(item => item.viewCount);
+                break;
+            case 'year':
+                labels = data.statYear.map(item => item.timePeriod);
+                viewCounts = data.statYear.map(item => item.viewCount);
+                break;
+            default:
+                break;
+        }
+
+        const viewsChartData = {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Lượt xem phim',
+                    data: viewCounts,
+                    borderColor: 'rgb(53, 162, 235)',
+                    backgroundColor: 'rgba(53, 162, 235, 0.5)',
+                    tension: 0.3,
+                },
+            ],
+        };
+        setViewsData(viewsChartData);
+    };
+
+    const handleTimeRangeChange = (range) => {
+        setTimeRange(range);
+        updateChartData(stats, range);
+    };
+
+    // Hàm cập nhật dữ liệu biểu đồ thể loại
+    const updateCategoryChart = (categoryData) => {
+        const categoryChartData = {
+            labels: categoryData.map(item => item.categoryName),
+            datasets: [
+                {
+                    label: 'Số lượng phim',
+                    data: categoryData.map(item => item.movieCount),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)',
+                        'rgba(199, 199, 199, 0.7)',
+                        'rgba(83, 102, 255, 0.7)',
+                        'rgba(40, 159, 64, 0.7)',
+                        'rgba(210, 199, 199, 0.7)',
+                    ],
+                },
+            ],
+        };
+        setCategoryData(categoryChartData);
+    };
+
+    // Hàm cập nhật dữ liệu biểu đồ trạng thái
+    const updateStatusChart = (statusData) => {
+        const statusChartData = {
+            labels: statusData.map(item => item.statusText),
+            datasets: [
+                {
+                    label: 'Số lượng phim',
+                    data: statusData.map(item => item.movieCount),
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)',
+                    ],
+                    borderColor: [
+                        'rgb(54, 162, 235)',
+                        'rgb(255, 206, 86)',
+                        'rgb(75, 192, 192)',
+                        'rgb(255, 99, 132)',
+                        'rgb(153, 102, 255)',
+                        'rgb(255, 159, 64)',
+                    ],
+                    borderWidth: 1,
+                },
+            ],
+        };
+        setStatusData(statusChartData);
+    };
+    const updateMovieRatingChart = (data, sort) => {
+        let sortedData = [...data];
+        if (sort === 'point') {
+            sortedData.sort((a, b) => b.point - a.point);
+        } else if (sort === 'view') {
+            sortedData.sort((a, b) => b.view - a.view);
+        }
+
+        const movieRatingChartData = {
+            labels: sortedData.map(item => item.title),
+            datasets: [
+                {
+                    label: 'Điểm đánh giá',
+                    data: sortedData.map(item => item.point),
+                    backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    borderWidth: 1,
+                },
+                {
+                    label: 'Lượt xem',
+                    data: sortedData.map(item => item.view),
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgb(54, 162, 235)',
+                    borderWidth: 1,
+                },
+            ],
+        };
+        setMovieRatingData(movieRatingChartData);
+    };
+
+    const handleSortChange = (type) => {
+        setSortType(type);
+    };
+    const movieRatingOptions = {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            title: {
+                display: true,
+                text: 'Điểm đánh giá và Lượt xem theo phim',
+                font: { size: 16 }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        label += context.parsed.y;
+                        return label;
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: {
+                    maxRotation: 45,
+                    minRotation: 45,
+                    autoSkip: false
+                }
+            },
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Giá trị'
+                }
+            }
         }
     };
 
@@ -255,13 +387,25 @@ const DashBoardAdmin = () => {
                 }
             },
         },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
     };
     
     const pieOptions = {
         responsive: true,
         plugins: {
             legend: {
-                position: 'top',
+                position: 'right',
+                labels: {
+                    boxWidth: 15,
+                    padding: 15
+                }
             },
             title: {
                 display: true,
@@ -292,7 +436,7 @@ const DashBoardAdmin = () => {
                             <span className="fw-bold">Dashboard</span>
                         </div>
                     </div>
-                    {sidebarMenus.map((menu, index) => (
+                    {slidebarMenus.map((menu, index) => (
                         <div key={index} className="sidebar-menu-item">
                             <div className="sidebar-menu-header">
                                 {menu.icon}
@@ -380,9 +524,31 @@ const DashBoardAdmin = () => {
                         {/* Biểu đồ đường - Lượt xem theo thời gian */}
                         <Card className="mb-5 shadow-sm">
                             <Card.Header className="bg-light">
-                                <div className="d-flex align-items-center">
-                                    <FaChartLine className="me-2 text-primary" />
-                                    <h5 className="mb-0">Thống kê lượt xem</h5>
+                                <div className="d-flex align-items-center justify-content-between">
+                                    <div className="d-flex align-items-center">
+                                        <FaChartLine className="me-2 text-primary" />
+                                        <h5 className="mb-0">Thống kê lượt xem</h5>
+                                    </div>
+                                    <ButtonGroup>
+                                        <Button 
+                                            variant={timeRange === 'day' ? 'primary' : 'outline-primary'}
+                                            onClick={() => handleTimeRangeChange('day')}
+                                        >
+                                            Theo ngày
+                                        </Button>
+                                        <Button 
+                                            variant={timeRange === 'month' ? 'primary' : 'outline-primary'}
+                                            onClick={() => handleTimeRangeChange('month')}
+                                        >
+                                            Theo tháng
+                                        </Button>
+                                        <Button 
+                                            variant={timeRange === 'year' ? 'primary' : 'outline-primary'}
+                                            onClick={() => handleTimeRangeChange('year')}
+                                        >
+                                            Theo năm
+                                        </Button>
+                                    </ButtonGroup>
                                 </div>
                             </Card.Header>
                             <Card.Body>
@@ -427,10 +593,38 @@ const DashBoardAdmin = () => {
                                 </Card>
                             </Col>
                         </Row>
+                        <Card className="mb-5 shadow-sm">
+                            <Card.Header className="bg-light">
+                                <div className="d-flex align-items-center justify-content-between">
+                                    <div className="d-flex align-items-center">
+                                        <FaChartBar className="me-2 text-info" />
+                                        <h5 className="mb-0">Điểm đánh giá và Lượt xem phim</h5>
+                                    </div>
+                                    <ButtonGroup>
+                                        <Button 
+                                            variant={sortType === 'point' ? 'info' : 'outline-info'}
+                                            onClick={() => handleSortChange('point')}
+                                        >
+                                            Sắp xếp theo điểm
+                                        </Button>
+                                        <Button 
+                                            variant={sortType === 'view' ? 'info' : 'outline-info'}
+                                            onClick={() => handleSortChange('view')}
+                                        >
+                                            Sắp xếp theo lượt xem
+                                        </Button>
+                                    </ButtonGroup>
+                                </div>
+                            </Card.Header>
+                            <Card.Body>
+                                <div style={{ height: '400px' }}>
+                                    <Bar options={movieRatingOptions} data={movieRatingData} />
+                                </div>
+                            </Card.Body>
+                        </Card>
                     </Container>
                 </div>
             </div>
-
             <Footer />
         </div>
     );

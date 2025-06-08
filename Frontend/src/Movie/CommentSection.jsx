@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, Card, Alert, Spinner } from 'react-bootstrap';
+import { Form, Button, Card, Alert, Spinner, Modal } from 'react-bootstrap';
 import { FaUser, FaReply, FaThumbsUp, FaFlag, FaTrash, FaEdit } from 'react-icons/fa';
 import axios from 'axios';
 import './CommentSection.css';
 import slugify from '../Helper/Slugify';
+import Cookies from 'js-cookie';
+import  {UpComment, UpdateComment, DeleteComment, GetComment} from '../apis/commentAPI';
+import { UpReport } from '../apis/reportAPI';
+import { toast } from 'react-toastify';
+
 
 const CommentSection = ({ movieId, movieTitle }) => {
     const [comments, setComments] = useState([]);
@@ -13,16 +18,23 @@ const CommentSection = ({ movieId, movieTitle }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [userName, setUserName] = useState();
     const [userData, setUserData] = useState(null);
     const [editingComment, setEditingComment] = useState(null);
     const [editText, setEditText] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
+    const [showReportModal, setShowReportModal] = useState(false);
+    const [reportContent, setReportContent] = useState('');
+    const [reportLoading, setReportLoading] = useState(false);
+    const [selectedCommentId, setSelectedCommentId] = useState(null);
 
     useEffect(() => {
-        const token = localStorage.getItem('userToken');
+        const token = Cookies.get('accessToken');
+        const username = Cookies.get('username');
         const user = JSON.parse(localStorage.getItem('userData'));
         setIsLoggedIn(!!token);
         setUserData(user);
+        setUserName(username);
         fetchComments();
     }, [movieId]);
 
@@ -30,7 +42,8 @@ const CommentSection = ({ movieId, movieTitle }) => {
         try {
             setLoading(true);
             const slugTitle = slugify(movieTitle);
-            const response = await axios.get(`http://localhost:5285/api/comment/GetCommentBySlugTitle/${slugTitle}`);
+            // const response = await axios.get(`http://localhost:5285/api/comment/GetCommentBySlugTitle/${slugTitle}`);
+            const response = await GetComment(slugTitle);
             setComments(response.data);
             setLoading(false);
         } catch (err) {
@@ -53,20 +66,25 @@ const CommentSection = ({ movieId, movieTitle }) => {
         }
 
         try {
-            const token = localStorage.getItem('userToken');
+            const token = Cookies.get('accessToken');
             if (!token) {
                 setError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại');
                 return;
             }
 
             const slugTitle = slugify(movieTitle);
-            await axios.post('http://localhost:5285/api/comment/AddComment', {
+            const payload = {
                 slugTitle: slugTitle,
-                content: newComment,
-                parentId: null
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+                content: newComment
+            }
+            // await axios.post('http://localhost:5285/api/comment/AddComment', {
+            //     slugTitle: slugTitle,
+            //     content: newComment,
+            //     parentId: null
+            // }, {
+            //     headers: { Authorization: `Bearer ${token}` }
+            // });
+            await UpComment(payload);
             setNewComment('');
             setError('');
             setSuccessMessage('Bình luận đã được đăng thành công!');
@@ -115,14 +133,38 @@ const CommentSection = ({ movieId, movieTitle }) => {
     };
 
     const handleReport = async (commentId) => {
+        setSelectedCommentId(commentId);
+        setShowReportModal(true);
+    };
+
+    const handleReportSubmit = async () => {
+        if (!reportContent.trim()) {
+            setError('Vui lòng nhập nội dung báo cáo');
+            return;
+        }
+
+        setReportLoading(true);
         try {
-            const token = localStorage.getItem('userToken');
-            await axios.post(`http://localhost:5285/api/comments/${commentId}/report`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            alert('Bình luận đã được báo cáo.');
-        } catch (err) {
-            setError('Không thể báo cáo bình luận. Vui lòng thử lại sau.');
+
+            const payload = {
+                idComment: selectedCommentId,
+                content: reportContent
+            };
+            const response = await UpReport(payload);
+            
+            if (response.status !== 200) {
+                throw new Error('Failed to send report');
+            }
+
+            toast.success('Cảm ơn bạn đã báo cáo!');
+            setShowReportModal(false);
+            setReportContent('');
+            setSelectedCommentId(null);
+        } catch (error) {
+            console.error('Error sending report:', error);
+            setError('Có lỗi xảy ra khi gửi báo cáo');
+        } finally {
+            setReportLoading(false);
         }
     };
 
@@ -130,10 +172,11 @@ const CommentSection = ({ movieId, movieTitle }) => {
         if (!confirm('Bạn có chắc chắn muốn xóa bình luận này?')) return;
 
         try {
-            const token = localStorage.getItem('userToken');
-            await axios.delete(`http://localhost:5285/api/comment/DeleteComment/${commentId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            
+            // await axios.delete(`http://localhost:5285/api/comment/DeleteComment/${commentId}`, {
+            //     headers: { Authorization: `Bearer ${token}` }
+            // });
+            await DeleteComment(commentId);
             fetchComments();
         } catch (err) {
             setError('Không thể xóa bình luận. Vui lòng thử lại sau.');
@@ -144,13 +187,18 @@ const CommentSection = ({ movieId, movieTitle }) => {
         if (!editText.trim()) return;
 
         try {
-            const token = localStorage.getItem('userToken');
-            await axios.put(`http://localhost:5285/api/comment/UpdateComment`, {
-                IdComment: commentId,
+            
+            // await axios.put(`http://localhost:5285/api/comment/UpdateComment`, {
+            //     IdComment: commentId,
+            //     Content: editText
+            // }, {
+            //     headers: { Authorization: `Bearer ${token}` }
+            // });
+            const payload = {
+                IdComment : commentId,
                 Content: editText
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            }
+            await UpdateComment(payload);
             setEditingComment(null);
             setEditText('');
             fetchComments();
@@ -162,13 +210,13 @@ const CommentSection = ({ movieId, movieTitle }) => {
     };
 
     const startEditing = (comment) => {
-        setEditingComment(comment.id);
+        setEditingComment(comment.idComment);
         setEditText(comment.content);
     };
 
     // Render một bình luận và các phản hồi của nó
     const renderComment = (comment, isReply = false) => {
-        const isOwner = userData && userData.userName === comment.idUserName;
+        const isOwner = userData && userName === comment.idUserName;
         
         return (
             <Card key={comment.idComment} className={`mb-3 ${isReply ? 'ms-5' : ''}`}>
@@ -346,6 +394,46 @@ const CommentSection = ({ movieId, movieTitle }) => {
                     ))}
                 </>
             )}
+
+            {/* Modal Báo cáo */}
+            <Modal show={showReportModal} onHide={() => setShowReportModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Báo cáo bình luận</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Nội dung báo cáo</Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                rows={4}
+                                value={reportContent}
+                                onChange={(e) => setReportContent(e.target.value)}
+                                placeholder="Nhập nội dung báo cáo của bạn..."
+                            />
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowReportModal(false)}>
+                        Hủy
+                    </Button>
+                    <Button 
+                        variant="primary" 
+                        onClick={handleReportSubmit}
+                        disabled={reportLoading}
+                    >
+                        {reportLoading ? (
+                            <>
+                                <Spinner animation="border" size="sm" className="me-2" />
+                                Đang gửi...
+                            </>
+                        ) : (
+                            'Gửi báo cáo'
+                        )}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 };

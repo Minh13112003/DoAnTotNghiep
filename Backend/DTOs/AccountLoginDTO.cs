@@ -14,9 +14,7 @@ namespace DoAnTotNghiep.DTOs
         [Required]
         [EmailAddress]
         public string? EmailAddress { get; set; }
-        [Required]
-        [Range(1, 130, ErrorMessage = "Age must be between 1 and 130.")]
-        public int? Age { get; set; }
+        public DateTime Birthday { get; set; }
         public string? PhoneNumber { get; set; }
 
     }

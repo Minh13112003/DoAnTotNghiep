@@ -1,13 +1,13 @@
 import React from 'react';
-import './MoiCapNhat.css'; // Import CSS
+import './MoiCapNhat.css'; 
 import { Link } from 'react-router-dom';
-const MoiCapNhat = ({ movies, type }) => {
+const MoiCapNhat = ({ movies, type, links }) => {
     return (
         <div>
             <div className='row'>
                 <div className="d-flex justify-content-between align-items-center">
                     <h4 className="ms-2"><b>{type}</b></h4>
-                    <a href='#' className="text-decoration-none text-danger">Xem Tất Cả →</a>
+                    <a href={links} className="text-decoration-none text-danger">Xem Tất Cả →</a>
                 </div>
             </div>
             <div className='row mt-3'>

@@ -8,6 +8,8 @@ import Navbar from '../Dashboard/Navbar';
 import Footer from '../Dashboard/Footer';
 import './AdminStyles.css';
 import { toast } from 'react-toastify';
+import { slidebarMenus } from './slidebar';
+import { GetAll, AddCategory, DeleteCategory, UpdateCategory } from '../apis/categoryAPI';
 
 const CategoryManagement = () => {
     const navigate = useNavigate();
@@ -27,74 +29,6 @@ const CategoryManagement = () => {
     });
 
     // Thêm định nghĩa sidebarMenus
-    const sidebarMenus = [
-        {
-            title: 'Quản lý Phim',
-            icon: <FaFilm />,
-            items: [
-                {
-                    title: 'Danh sách phim',
-                    link: '/quan-ly/phim/danh-sach'
-                },
-                {
-                    title: 'Danh sách tập phim',
-                    link: '/quan-ly/phim/tap-phim'
-                }
-            ]
-        },
-        {
-            title: 'Quản lý Thể loại',
-            icon: <FaList />,
-            items: [
-                {
-                    title: 'Danh sách thể loại',
-                    link: '/quan-ly/the-loai/danh-sach'
-                },
-                {
-                    title: 'Thêm thể loại',
-                    link: '/quan-ly/the-loai/them-moi'
-                }
-            ]
-        },
-        {
-            title: 'Quản lý Tài khoản',
-            icon: <FaUsers />,
-            items: [
-                {
-                    title: 'Danh sách người dùng',
-                    link: '/quan-ly/tai-khoan/danh-sach'
-                },
-                {
-                    title: 'Thêm người dùng',
-                    link: '/quan-ly/tai-khoan/them-moi'
-                }
-            ]
-        },
-        {
-            title: 'Quản lý Bình luận',
-            icon: <FaList />,
-            items: [
-                {
-                    title: 'Danh sách bình luận',
-                    link: '/quan-ly/binh-luan'
-                },
-                {
-                    title: 'Bình luận bị báo cáo',
-                    link: '/quan-ly/binh-luan/bao-cao'
-                }
-            ]
-        },
-        {
-            title: 'Quản lý Góp ý',
-            icon: <FaList />,
-            items: [
-                {
-                    title: 'Danh sách góp ý',
-                    link: '/quan-ly/gop-y'
-                }
-            ]
-        }
-    ];
 
     useEffect(() => {
         fetchCategories();
@@ -102,7 +36,8 @@ const CategoryManagement = () => {
 
     const fetchCategories = async () => {
         try {
-            const response = await axios.get('http://localhost:5285/api/category/getall');
+            // const response = await axios.get('http://localhost:5285/api/category/getall');
+            const response = await GetAll();
             setCategoryList(response.data);
         } catch (error) {
             console.error('Error fetching categories:', error);
@@ -132,22 +67,23 @@ const CategoryManagement = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const token = localStorage.getItem('userToken');
             if (selectedCategory) {
                 // Cập nhật thể loại
-                await axios.put('http://localhost:5285/api/category/update', formData, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
+                // await axios.put('http://localhost:5285/api/category/update', formData, {
+                //     headers: {
+                //         Authorization: `Bearer ${token}`
+                //     }
+                // });
+                await UpdateCategory(formData);
                 toast.success('Cập nhật thể loại thành công!');
             } else {
                 // Thêm thể loại mới
-                await axios.post('http://localhost:5285/api/category/addCategory', formData, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
+                // await axios.post('http://localhost:5285/api/category/addCategory', formData, {
+                //     headers: {
+                //         Authorization: `Bearer ${token}`
+                //     }
+                // });
+                await AddCategory(formData);
                 toast.success('Thêm thể loại mới thành công!');
             }
             fetchCategories();
@@ -161,12 +97,13 @@ const CategoryManagement = () => {
     const handleDelete = async (idCategories) => {
         if (window.confirm('Bạn có chắc muốn xóa thể loại này?')) {
             try {
-                const token = localStorage.getItem('userToken');
-                await axios.delete(`http://localhost:5285/api/category/deleteCategory/${idCategories}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
+                
+                // await axios.delete(`http://localhost:5285/api/category/deleteCategory/${idCategories}`, {
+                //     headers: {
+                //         Authorization: `Bearer ${token}`
+                //     }
+                // });
+                await DeleteCategory(idCategories);
                 fetchCategories();
                 toast.success('Xóa thể loại thành công!');
             } catch (error) {
@@ -223,7 +160,7 @@ const CategoryManagement = () => {
                             Quay lại Dashboard
                         </Button>
                     </div>
-                    {sidebarMenus.map((menu, index) => (
+                    {slidebarMenus.map((menu, index) => (
                         <div key={index} className="sidebar-menu-item">
                             <div className="sidebar-menu-header">
                                 {menu.icon}

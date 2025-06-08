@@ -21,7 +21,7 @@ namespace DoAnTotNghiep.Data
         public DbSet<Actor> Actors { get; set; }
         public DbSet<MovieRating> MovieRatings { get; set; }
         public DbSet<History> History { get; set; }
-        
+        public DbSet<PaymentOrder> PaymentOrder {  get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -47,6 +47,7 @@ namespace DoAnTotNghiep.Data
                 b.Property(m => m.Quality).HasColumnName("Quality").HasColumnType("VARCHAR(50)"); // Ví dụ: nvarchar(50)
                 b.Property(m => m.Block).HasColumnName("Block").IsRequired(true);
                 b.Property(m => m.NameDirector).HasColumnName("NameDirector").HasColumnType("VARCHAR(50)");
+                b.Property(m => m.SlugNameDirector).HasColumnName("SlugNameDirector").HasColumnType("VARCHAR(100)");
                 b.Property(m => m.IsVip).HasColumnName("IsVip").IsRequired(true);
                 b.Property(m => m.Language).HasColumnName("Language").HasColumnType("VARCHAR(50)"); // Ví dụ: nvarchar(50)
                 b.Property(m => m.View).HasColumnName("View");
@@ -164,6 +165,7 @@ namespace DoAnTotNghiep.Data
             {
                 b.ToTable("History");
                 b.HasKey(mt => new { mt.IdMovie, mt.UserName });
+                b.Property(h => h.ViewAt).HasColumnName("ViewAt").HasColumnType("TIMESTAMP").IsRequired(true);
                 b.HasOne(r => r.Movie)
                     .WithMany(b => b.History)
                     .HasForeignKey(r => r.IdMovie)
@@ -178,6 +180,19 @@ namespace DoAnTotNghiep.Data
                    .WithMany(b => b.MovieRating)
                    .HasForeignKey(r => r.IdMovie)
                    .OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<PaymentOrder>(p =>
+            {
+                p.ToTable("PaymentOrder");
+                p.HasKey(k => k.IdPaymentOrder);
+                p.Property(r => r.IdPaymentOrder).HasColumnName("IdPaymentOrder").HasColumnType("VARCHAR(50)").IsRequired(true);
+                p.Property(r => r.OrderCode).HasColumnName("OrderCode").HasColumnType("VARCHAR(50)").IsRequired(true);
+                p.Property(r => r.UserName).HasColumnName("UserName").HasColumnType("VARCHAR(150)").IsRequired(true);
+                p.Property(r => r.Item).HasColumnName("Item").HasColumnType("VARCHAR(200)").IsRequired(true);
+                p.Property(r => r.Status).HasColumnName("Status").HasColumnType("VARCHAR(10)").IsRequired(true);
+                p.Property(r => r.TransactionId).HasColumnName("TransactionId").HasColumnType("VARCHAR(250)").IsRequired(true);
+                p.Property(r => r.CreatedAt).HasColumnName("CreatedAt").HasColumnType("TIMESTAMP").IsRequired(true);
+
             });
             
             

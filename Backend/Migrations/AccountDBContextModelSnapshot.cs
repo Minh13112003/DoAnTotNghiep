@@ -112,6 +112,9 @@ namespace DoAnTotNghiep.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime?>("ExpirationTime")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("FavoriteSlugTitle")
                         .HasColumnType("text");
 
@@ -155,6 +158,9 @@ namespace DoAnTotNghiep.Migrations
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
+
+                    b.Property<DateTime?>("TimeTopUp")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean");
@@ -237,6 +243,10 @@ namespace DoAnTotNghiep.Migrations
                     b.Property<string>("UserName")
                         .HasColumnType("text");
 
+                    b.Property<DateTime>("ViewAt")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("ViewAt");
+
                     b.HasKey("IdMovie", "UserName");
 
                     b.ToTable("History", (string)null);
@@ -269,6 +279,9 @@ namespace DoAnTotNghiep.Migrations
                     b.HasKey("IdLinkMovie");
 
                     b.HasIndex("IdMovie");
+
+                    b.HasIndex("UrlMovie")
+                        .IsUnique();
 
                     b.ToTable("LinkMovie", (string)null);
                 });
@@ -334,6 +347,11 @@ namespace DoAnTotNghiep.Migrations
                         .HasColumnType("VARCHAR(50)")
                         .HasColumnName("Quality");
 
+                    b.Property<string>("SlugNameDirector")
+                        .IsRequired()
+                        .HasColumnType("VARCHAR(100)")
+                        .HasColumnName("SlugNameDirector");
+
                     b.Property<string>("SlugNation")
                         .IsRequired()
                         .HasColumnType("VARCHAR(50)")
@@ -388,6 +406,46 @@ namespace DoAnTotNghiep.Migrations
                     b.HasKey("IdMovie", "UserName");
 
                     b.ToTable("MovieRating", (string)null);
+                });
+
+            modelBuilder.Entity("DoAnTotNghiep.Model.PaymentOrder", b =>
+                {
+                    b.Property<string>("IdPaymentOrder")
+                        .HasColumnType("VARCHAR(50)")
+                        .HasColumnName("IdPaymentOrder");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("Item")
+                        .IsRequired()
+                        .HasColumnType("VARCHAR(200)")
+                        .HasColumnName("Item");
+
+                    b.Property<string>("OrderCode")
+                        .IsRequired()
+                        .HasColumnType("VARCHAR(50)")
+                        .HasColumnName("OrderCode");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("VARCHAR(10)")
+                        .HasColumnName("Status");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasColumnType("VARCHAR(250)")
+                        .HasColumnName("TransactionId");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("VARCHAR(150)")
+                        .HasColumnName("UserName");
+
+                    b.HasKey("IdPaymentOrder");
+
+                    b.ToTable("PaymentOrder", (string)null);
                 });
 
             modelBuilder.Entity("DoAnTotNghiep.Model.Report", b =>

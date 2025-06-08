@@ -20,6 +20,7 @@
         public string SlugNation { get; set; } = string.Empty;
         public bool Block {  get; set; } = false;
         public string NameDirector {  get; set; } = string.Empty;
+        public string SlugNameDirector {  get; set; } = string.Empty;
         public bool IsVip { get; set; } = false;
         public decimal Point {  get; set; }
         public virtual List<SubCategory>? SubCategories { get;  }

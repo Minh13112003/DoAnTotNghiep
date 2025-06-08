@@ -103,6 +103,7 @@
     background: #f8f9fa;
     min-height: calc(100vh - 120px);
     transition: all 0.3s ease;
+    
 }
 
 .admin-content.expanded {
@@ -294,3 +295,20 @@ footer {
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
+.rating-stars {
+    display: flex;
+    align-items: center;
+  }
+  
+.rating-stars .fa-star {
+    transition: color 0.2s;
+  }
+  
+  /* Căn chỉnh modal đánh giá */
+.modal-body .form-group {
+    margin-bottom: 1.5rem;
+  }
+  
+.modal-body .form-group .d-flex {
+    align-items: center;
+  }

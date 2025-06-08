@@ -12,5 +12,7 @@ namespace DoAnTotNghiep.Model
         public DateTime? OtpCreatedAt {  get; set; }
         public string? RefreshToken { get; set; }
         public DateTime RefreshTokenExpiryTime { get; set; }
+        public DateTime? TimeTopUp { get; set; }
+        public DateTime? ExpirationTime { get; set; }
     }
 }

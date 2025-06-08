@@ -8,6 +8,9 @@ import Navbar from '../Dashboard/Navbar';
 import Footer from '../Dashboard/Footer';
 import './AdminStyles.css';
 import { toast } from 'react-toastify';
+import { AddMovie, UpdateMovie, DeleteMovie, GetAllMovie } from '../apis/movieAPI';
+import CreatableSelect from 'react-select/creatable';
+import { slidebarMenus } from './slidebar';
 
 const MovieManagement = () => {
     const navigate = useNavigate();
@@ -59,74 +62,7 @@ const MovieManagement = () => {
     });
 
     // Thêm định nghĩa sidebarMenus vào đây
-    const sidebarMenus = [
-            {
-                title: 'Quản lý Phim',
-                icon: <FaFilm />,
-                items: [
-                    {
-                        title: 'Danh sách phim',
-                        link: '/quan-ly/phim/danh-sach'
-                    },
-                    {
-                        title: 'Danh sách tập phim',
-                        link: '/quan-ly/phim/tap-phim'
-                    }
-                ]
-            },
-            {
-                title: 'Quản lý Thể loại',
-                icon: <FaList />,
-                items: [
-                    {
-                        title: 'Danh sách thể loại',
-                        link: '/quan-ly/the-loai/danh-sach'
-                    },
-                    {
-                        title: 'Thêm thể loại',
-                        link: '/quan-ly/the-loai/them-moi'
-                    }
-                ]
-            },
-            {
-                title: 'Quản lý Tài khoản',
-                icon: <FaUsers />,
-                items: [
-                    {
-                        title: 'Danh sách người dùng',
-                        link: '/quan-ly/tai-khoan/danh-sach'
-                    },
-                    {
-                        title: 'Thêm người dùng',
-                        link: '/quan-ly/tai-khoan/them-moi'
-                    }
-                ]
-            },
-            {
-                title: 'Quản lý Bình luận',
-                icon: <FaList />,
-                items: [
-                    {
-                        title: 'Danh sách bình luận',
-                        link: '/quan-ly/binh-luan'
-                    },
-                    {
-                        title: 'Bình luận bị báo cáo',
-                        link: '/quan-ly/binh-luan/bao-cao'
-                    }
-                ]
-            },
-            {
-                title: 'Quản lý Góp ý',
-                icon: <FaList />,
-                items: [
-                    {
-                        title: 'Danh sách góp ý',
-                        link: '/quan-ly/gop-y'
-                    }
-                ]
-            }
-        ];
+    
 
     useEffect(() => {
         fetchMovies();
@@ -134,13 +70,14 @@ const MovieManagement = () => {
 
     const fetchMovies = async () => {
         try {
-            const token = localStorage.getItem('userToken');
-            const response = await axios.get('http://localhost:5285/api/movie/ShowAllMovieCategory', {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            setMovies(response.data);
+            // const token = localStorage.getItem('userToken');
+            // const response = await axios.get('http://localhost:5285/api/movie/ShowAllMovieCategory', {
+            //     headers: {
+            //         Authorization: `Bearer ${token}`
+            //     }
+            // });
+            const response = await GetAllMovie(1,10000000);
+            setMovies(response.data.movies);
         } catch (error) {
             console.error('Error fetching movies:', error);
         }
@@ -168,11 +105,6 @@ const MovieManagement = () => {
                     }
                 });
                 const movieData = response.data[0];
-                
-                console.log('Raw API Response:', response);
-                console.log('Movie Data Structure:', JSON.stringify(movieData, null, 2));
-                console.log('Type Movie:', movieData.typeMovie);
-
                 if (!movieData) {
                     console.error('Movie data is null or undefined');
                     return;
@@ -248,14 +180,20 @@ const MovieManagement = () => {
                 nameActors: formData.nameActors.join(', ')
             };
             
-            await axios.post('http://localhost:5285/api/movie/addmovie', submitData, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            fetchMovies();
-            setShowModal(false);
-            toast.success('Thêm phim mới thành công!');
+            // await axios.post('http://localhost:5285/api/movie/addmovie', submitData, {
+            //     headers: {
+            //         Authorization: `Bearer ${token}`
+            //     }
+            // });
+            const result = await AddMovie(submitData);
+            if(result.status == 200){
+                fetchMovies();
+                setShowModal(false);
+                toast.success('Thêm phim mới thành công!');
+            }
+            // fetchMovies();
+            //      setShowModal(false);
+            //      toast.success('Thêm phim mới thành công!');
         } catch (error) {
             console.error('Error adding movie:', error);
             toast.error('Thêm phim mới thất bại!');
@@ -265,18 +203,13 @@ const MovieManagement = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const token = localStorage.getItem('userToken');
             const submitData = {
                 ...formData,
                 nameCategories: formData.nameCategories.join(', '),
                 nameActors: formData.nameActors.join(', ')
             };
             
-            await axios.put('http://localhost:5285/api/movie/update', submitData, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+            await UpdateMovie(submitData);
             fetchMovies();
             setShowModal(false);
             toast.success('Cập nhật phim thành công!');
@@ -289,12 +222,12 @@ const MovieManagement = () => {
     const handleDelete = async (id) => {
         if (window.confirm('Bạn có chắc muốn xóa phim này?')) {
             try {
-                const token = localStorage.getItem('userToken');
-                await axios.delete(`http://localhost:5285/api/movie/${id}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
+                // await axios.delete(`http://localhost:5285/api/movie/delete/${id}`, {
+                //     headers: {
+                //         Authorization: `Bearer ${token}`
+                //     }
+                // });
+                await DeleteMovie(id);
                 fetchMovies();
             } catch (error) {
                 console.error('Error deleting movie:', error);
@@ -400,7 +333,7 @@ const MovieManagement = () => {
                             Quay lại Dashboard
                         </Button>
                     </div>
-                    {sidebarMenus.map((menu, index) => (
+                    {slidebarMenus.map((menu, index) => (
                         <div key={index} className="sidebar-menu-item">
                             <div className="sidebar-menu-header">
                                 {menu.icon}
@@ -444,11 +377,11 @@ const MovieManagement = () => {
                         <div style={{ 
                             overflowX: 'auto', 
                             width: '100%',
-                            minWidth: '1000px'
+                            maxWidth: '100%'
                         }}>
                             <Table striped bordered hover responsive style={{ 
-                                minWidth: '1000px',
-                                whiteSpace: 'nowrap'
+                                width: 'max-content',
+                                minWidth: '100%'
                             }}>
                                 <thead>
                                     <tr>
@@ -474,7 +407,7 @@ const MovieManagement = () => {
                                 <tbody>
                                     {currentItems.map(movie => (
                                         <tr key={movie.id}>
-                                            <td>
+                                            <td style={{ minWidth: '100px' }}>
                                                 <div className="d-flex align-items-center">
                                                     <img 
                                                         src={movie.image} 
@@ -492,7 +425,7 @@ const MovieManagement = () => {
                                                     </Button>
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td style={{ minWidth: '100px' }}>
                                                 <div className="d-flex align-items-center">
                                                     <img 
                                                         src={movie.backgroundImage} 
@@ -510,8 +443,8 @@ const MovieManagement = () => {
                                                     </Button>
                                                 </div>
                                             </td>
-                                            <td>{movie.title}</td>
-                                            <td>
+                                            <td style={{ minWidth: '200px' }}>{movie.title}</td>
+                                            <td style={{ minWidth: '200px' }}>
                                                 <div className="d-flex align-items-center">
                                                     <span className="me-2">{truncateDescription(movie.description)}</span>
                                                     <Button
@@ -524,31 +457,31 @@ const MovieManagement = () => {
                                                     </Button>
                                                 </div>
                                             </td>
-                                            <td>{movie.nameCategories}</td>
-                                            <td>{movie.duration} phút</td>
-                                            <td>{movie.numberOfMovie}</td>
-                                            <td>{movie.statusText}</td>
-                                            <td>{movie.typeMovie}</td>
-                                            <td>{movie.quality}</td>
-                                            <td>{movie.language}</td>
-                                            <td>{movie.view}</td>
-                                            <td>{movie.nameDirector}</td>
-                                            <td>{movie.nameActors}</td>
-                                            <td>
+                                            <td style={{ minWidth: '150px' }}>{movie.nameCategories}</td>
+                                            <td style={{ minWidth: '100px' }}>{movie.duration} phút</td>
+                                            <td style={{ minWidth: '100px' }}>{movie.numberOfMovie}</td>
+                                            <td style={{ minWidth: '150px' }}>{movie.statusText}</td>
+                                            <td style={{ minWidth: '150px' }}>{movie.typeMovie}</td>
+                                            <td style={{ minWidth: '150px' }}>{movie.quality}</td>
+                                            <td style={{ minWidth: '150px' }}>{movie.language}</td>
+                                            <td style={{ minWidth: '150px' }}>{movie.view}</td>
+                                            <td style={{ minWidth: '150px' }}>{movie.nameDirector}</td>
+                                            <td style={{ minWidth: '150px' }}>{movie.nameActors}</td>
+                                            <td style={{ minWidth: '150px' }}>
                                                 {movie.isVip ? (
                                                     <FaCheck style={{ color: 'green', fontSize: '20px' }} />
                                                 ) : (
                                                     <FaX style={{ color: 'red', fontSize: '20px' }} />
                                                 )}
                                             </td>
-                                            <td>
+                                            <td style={{ minWidth: '150px' }}>
                                                 {movie.block ? (
                                                     <FaCheck style={{ color: 'green', fontSize: '20px' }} />
                                                 ) : (
                                                     <FaX style={{ color: 'red', fontSize: '20px' }} />
                                                 )}
                                             </td>
-                                            <td>
+                                            <td style={{ minWidth: '150px' }}>
                                                 <Button 
                                                     variant="warning" 
                                                     size="sm" 
@@ -676,26 +609,30 @@ const MovieManagement = () => {
                                             <Form.Group className="mb-3">
                                                 <Form.Label>Thể loại</Form.Label>
                                                 {[...Array(categoryCount)].map((_, index) => (
-                                                    <div key={index} className="mb-2">
-                                                        <Form.Select
-                                                            value={formData.nameCategories[index] || ''}
-                                                            onChange={(e) => handleCategoryChange(index, e.target.value)}
-                                                            required
-                                                        >
-                                                            <option value="">Chọn thể loại</option>
-                                                            {categories.map(category => (
-                                                                <option key={category.id} value={category.nameCategories}>
-                                                                    {category.nameCategories}
-                                                                </option>
-                                                            ))}
-                                                        </Form.Select>
-                                                    </div>
+                                                <div key={index} className="mb-2">
+                                                    <CreatableSelect
+                                                    isClearable
+                                                    placeholder="Chọn hoặc tạo thể loại..."
+                                                    value={
+                                                        formData.nameCategories[index]
+                                                        ? { value: formData.nameCategories[index], label: formData.nameCategories[index] }
+                                                        : null
+                                                    }
+                                                    onChange={(selectedOption) =>
+                                                        handleCategoryChange(index, selectedOption ? selectedOption.value : '')
+                                                    }
+                                                    options={categories.map((category) => ({
+                                                        value: category.nameCategories,
+                                                        label: category.nameCategories,
+                                                    }))}
+                                                    />
+                                                </div>
                                                 ))}
                                                 <Button variant="outline-primary" size="sm" onClick={addCategoryField}>
-                                                    Thêm thể loại
+                                                Thêm thể loại
                                                 </Button>
                                             </Form.Group>
-                                        </Col>
+                                            </Col>
                                     </Row>
                                     
                                     

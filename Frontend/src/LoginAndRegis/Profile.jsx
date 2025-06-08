@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { Container, Row, Col, Card, Form, Spinner, Alert } from 'react-bootstrap';
-import { FaUser, FaEnvelope, FaPhone, FaBirthdayCake } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaBirthdayCake, FaArrowLeft } from 'react-icons/fa';
 import { DataContext } from '../ContextAPI/ContextNavbar';
 import Navbar from '../Dashboard/Navbar';
 import Footer from '../Dashboard/Footer';
 import 'bootstrap/dist/css/bootstrap.min.css';
-
-
+import Cookies from 'js-cookie';
+import { ProfileInfor } from '../apis/authAPI';
+import { Link } from 'react-router-dom';
 
 const Profile = () => {
     const { categories, movieTypes, nations, statuses, statusMap } = useContext(DataContext);
     const [userInfo, setUserInfo] = useState({
-        userName: '',
+        username: '',
         email: '',
         phoneNumber: '',
         age: ''
@@ -23,19 +24,20 @@ const Profile = () => {
     useEffect(() => {
         const fetchUserInfo = async () => {
             try {
-                const token = localStorage.getItem('userToken');
-                const userData = JSON.parse(localStorage.getItem('userData'));
+                const username = Cookies.get('username');
 
-                const response = await axios.post(
-                    'http://localhost:5285/api/account/userinfor',
-                    { userName: userData.userName },
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        }
-                    }
-                );
+                // const response = await axios.post(
+                //     'http://localhost:5285/api/account/userinfor',
+                //     { userName: username },
+                //     {
+                //         headers: {
+                //             'Authorization': `Bearer ${token}`,
+                //             'Content-Type': 'application/json'
+                //         }
+                //     }
+                // );
+                const payload = {userName: username}
+                const response = await ProfileInfor(payload);
 
                 setUserInfo(response.data);
                 setLoading(false);
@@ -71,6 +73,16 @@ const Profile = () => {
         <div>
             <Navbar categories={categories} movieTypes={movieTypes} nations={nations} statuses={statuses} statusMap={statusMap} />
             <Container className="py-5">
+                <Row className="justify-content-center mb-3">
+                    <Col md={8} lg={6}>
+                        <div className="mb-3">
+                            <Link to="/" className="btn btn-outline-primary d-flex align-items-center">
+                                <FaArrowLeft className="me-2" />
+                                Quay lại trang chủ
+                            </Link>
+                        </div>
+                    </Col>
+                </Row>            
                 <Row className="justify-content-center">
                     <Col md={8} lg={6}>
                     <Card className="shadow">

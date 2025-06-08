@@ -4,6 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import slugify from '../Helper/Slugify';
 import { useData } from '../ContextAPI/ContextNavbar';
 import './Navbar.css';
+import Cookies from 'js-cookie';
+import { FaCrown } from 'react-icons/fa';
 
 const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
     const navigate = useNavigate();
@@ -19,13 +21,13 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const userMenuRef = useRef(null);
     const [userRole, setUserRole] = useState(null);
-
     const [isSearching, setIsSearching] = useState(false);
     const { searchMovies, keyword, setKeyword } = useData();
-
+    const {Username} = Cookies.get("username");
     useEffect(() => {
-        const token = localStorage.getItem('userToken');
+        const token = Cookies.get('accessToken');
         const userData = JSON.parse(localStorage.getItem('userData'));
+        
         setIsLoggedIn(!!token);
         if (userData) {
             setUserRole(userData.roles);
@@ -52,15 +54,30 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('userToken');
+        Cookies.remove('accessToken');
+        Cookies.remove('username');
+        Cookies.remove('refreshToken');
         localStorage.removeItem('userData');
         setIsLoggedIn(false);
         setShowUserMenu(false);
         navigate('/tai-khoan/auth');
     };
+
     const handleViewProfile = () => {
-        
         navigate('/tai-khoan/thong-tin-ca-nhan');
+    };
+
+    const handleSearch = () => {
+        if (keyword.trim()) {
+            setIsSearching(false);
+            navigate(`/tim-kiem?keyword=${encodeURIComponent(keyword.trim())}&page=1`);
+        }
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && keyword.trim()) {
+            handleSearch();
+        }
     };
 
     const UserMenu = () => (
@@ -71,7 +88,7 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
             >
                 <img
                     src="/path/to/default-avatar.png"
-                    alt="User Avatar"
+                    alt= {Username}
                     className="user-avatar"
                 />
             </div>
@@ -92,6 +109,14 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
                     >
                         <i className="fas fa-edit me-2"></i>
                         Thay đổi thông tin
+                    </Link>
+                    <Link 
+                        to="/danh-sach-thanh-toan" 
+                        className="dropdown-item"
+                        onClick={() => setShowUserMenu(false)}
+                    >
+                        <i className="fas fa-receipt me-2"></i>
+                        Danh sách thanh toán
                     </Link>
                     <div className="dropdown-divider"></div>
                     <button 
@@ -164,7 +189,7 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
                                     {nations.length > 0 ? (
                                         nations.map((nation, index) => (
                                             <li key={index}>    
-                                            <Link className="dropdown-item" to={`/quoc-gia/${nation.slugNation}`}>{nation.nation}</Link>
+                                                <Link className="dropdown-item" to={`/quoc-gia/${nation.slugNation}`}>{nation.nation}</Link>
                                             </li>
                                         ))
                                     ) : (
@@ -202,6 +227,27 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
                                     </Link>
                                 </li>
                             )}
+                            {isLoggedIn && (
+                                <li className="nav-item">
+                                    <Link 
+                                        to="/lich-su-xem" 
+                                        className="nav-link d-flex align-items-center"
+                                    >
+                                        Lịch sử 
+                                    </Link>
+                                </li>
+                            )}
+                            {isLoggedIn && (
+                                <li className="nav-item">
+                                    <Link 
+                                        to="/thanh-toan" 
+                                        className="nav-link d-flex align-items-center"
+                                    >
+                                        <FaCrown style={{ color: 'gold', marginRight: '5px' }} />
+                                        Nạp Vip
+                                    </Link>
+                                </li>
+                            )}
 
                             {isLoggedIn && userRole === 'Admin' && (
                                 <li className={`nav-item dropdown ${dropdownOpen.admin ? "show" : ""}`}
@@ -217,20 +263,36 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
                                 </li>
                             )}
                         </ul>
-                        <form className="d-flex align-items-center gap-2 position-relative" role="search">
-                            <input 
-                                className="form-control" 
-                                type="search" 
-                                placeholder="Tìm kiếm theo: tên phim, thể loại, quốc gia,..." 
-                                aria-label="Search" 
-                                style={{ height: "50px", borderRadius: "8px", width:"400px"}}
-                                value={keyword}
-                                onChange={(e) => setKeyword(e.target.value)}
-                                onFocus={() => setIsSearching(true)}
-                                onBlur={() => {
-                                    setTimeout(() => setIsSearching(false), 200);
-                                }}
-                            />
+                        <form 
+                            className="d-flex align-items-center gap-2 position-relative" 
+                            role="search"
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                handleSearch();
+                            }}
+                        >
+                            <div className="search-container">
+                                <input 
+                                    className="form-control search-input" 
+                                    type="search" 
+                                    placeholder="Tìm kiếm theo: tên phim, thể loại, quốc gia,..." 
+                                    aria-label="Search" 
+                                    style={{ height: "50px", borderRadius: "8px", width: "400px", paddingRight: "40px" }}
+                                    value={keyword}
+                                    onChange={(e) => setKeyword(e.target.value)}
+                                    onFocus={() => setIsSearching(true)}
+                                    onBlur={() => {
+                                        setTimeout(() => setIsSearching(false), 200);
+                                    }}
+                                    onKeyPress={handleKeyPress}
+                                />
+                                <span 
+                                    className="search-icon"
+                                    onClick={handleSearch}
+                                >
+                                    <i className="fas fa-search"></i>
+                                </span>
+                            </div>
                             {isSearching && keyword && searchMovies.length > 0 && (
                                 <ul
                                     style={{
@@ -261,6 +323,7 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
                                             onClick={() => {
                                                 setIsSearching(false);
                                                 setKeyword('');
+                                                navigate(`/chi-tiet-phim/${movieItem.id}__${slugify(movieItem.title)}`);
                                             }}
                                         >
                                             {movieItem.image ? (
@@ -336,7 +399,7 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
                                         borderRadius: "8px", 
                                         fontWeight: "bold", 
                                         fontSize: "14px", 
-                                        width:"auto", 
+                                        width: "auto", 
                                         whiteSpace: "nowrap"
                                     }}
                                 >

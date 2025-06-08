@@ -1,6 +1,8 @@
 ﻿using DoAnTotNghiep.DTOs;
+using DoAnTotNghiep.Helper.DateTimeVietNam;
 using DoAnTotNghiep.Model;
 using DoAnTotNghiep.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -39,12 +41,12 @@ namespace DoAnTotNghiep.Controllers
 
                 var result = await _signInManager.CheckPasswordSignInAsync(user, loginDTO.Password, false);
 
-                /*if (!result.Succeeded) return Unauthorized(new { message = "UserName or PassWord is incorrect" });
-                if(user.OTP == null || user.OTP != loginDTO.OTP )
+                if (!result.Succeeded) return Unauthorized(new { message = "UserName or PassWord is incorrect" });
+               /* if (user.OTP == null || user.OTP != loginDTO.OTP)
                 {
                     return Unauthorized(new { message = "Sai hoặc không tìm thấy OTP" });
                 }
-                if (user.OtpCreatedAt.HasValue && user.OtpCreatedAt.Value.AddMinutes(5) < DateTime.UtcNow) return Unauthorized(new {message = "OTP đã hết hạn"});
+                if (user.OtpCreatedAt.HasValue && user.OtpCreatedAt.Value.AddMinutes(5) < DateTime.UtcNow) return Unauthorized(new { message = "OTP đã hết hạn" });
                 user.OTP = null;
                 user.OtpCreatedAt = null;
                 await _userManager.UpdateAsync(user);*/
@@ -77,11 +79,12 @@ namespace DoAnTotNghiep.Controllers
             try
             {
                 if (!ModelState.IsValid) return BadRequest(ModelState);
+                var age = DateTimeHelper.CalculateAge(accountLoginDTO.Birthday);
                 var appUser = new AppUser
                 {
                     UserName = accountLoginDTO.UserName,
                     Email = accountLoginDTO.EmailAddress,
-                    Age = accountLoginDTO.Age,
+                    Age = age,
                     PhoneNumber = accountLoginDTO.PhoneNumber,
                 };
                 var createUser = await _userManager.CreateAsync(appUser, accountLoginDTO.Password!);
@@ -105,7 +108,7 @@ namespace DoAnTotNghiep.Controllers
                 }
                 else
                 {
-                    return StatusCode(501, createUser.Errors);
+                    return StatusCode(501, new { message = "Tài khoản hoặc mật khẩu đã được đăng kí" });
                 }
             }
             catch (Exception ex)
@@ -120,11 +123,12 @@ namespace DoAnTotNghiep.Controllers
             try
             {
                 if (!ModelState.IsValid) return BadRequest(ModelState);
+                var age = DateTimeHelper.CalculateAge(accountLoginDTO.Birthday);
                 var appUser = new AppUser
                 {
                     UserName = accountLoginDTO.UserName,
                     Email = accountLoginDTO.EmailAddress,
-                    Age = accountLoginDTO.Age,
+                    Age = age,
                     PhoneNumber = accountLoginDTO.PhoneNumber,
                 };
                 var createUser = await _userManager.CreateAsync(appUser, accountLoginDTO.Password!);
@@ -241,8 +245,9 @@ namespace DoAnTotNghiep.Controllers
                 Roles = roleString
             });
         }
-        [HttpPost("SendOTP/{username}")]
-        public async Task<IActionResult> SendOtpToEmail(string username)
+
+        [HttpPost("SendOTP/{username}/{type}")]
+        public async Task<IActionResult> SendOtpToEmail(string username, int type)
         {
             var user = await _userManager.FindByNameAsync(username);
             if (user == null || string.IsNullOrEmpty(user.Email)) return NotFound(new {message = "Không tìm thấy email người dùng hoặc trống thông tin"});
@@ -252,11 +257,50 @@ namespace DoAnTotNghiep.Controllers
             user.OtpCreatedAt = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
 
-            var subject = "Mã OTP đăng nhập";
+            var subject = "Mã OTP";
             var body = $"Mã OTP của bạn là: <b>{otp}</b> (có hiệu lực trong 5 phút).";
+            switch (type)
+            {
+                case 1:
+                    subject = "Mã OTP đăng nhập";
+                    body = $"Mã OTP đăng nhập của bạn là: <b>{otp}</b> (có hiệu lực trong 5 phút).";
+                    break;
+                case 2:
+                    subject = "Mã OTP đổi mật khẩu";
+                    body = $"Bạn đang yêu cầu đổi mật khẩu. Mã OTP: <b>{otp}</b> (có hiệu lực trong 5 phút).";
+                    break;
+                case 3:
+                    subject = "Mã OTP đổi thông tin ";
+                    body = $"Đây là mã xác minh đổi thông tin: <b>{otp}</b> (có hiệu lực trong 5 phút).";
+                    break;
+                default:
+                    break;
+            }
 
             await _emailService.SendEmailAsync(user.Email, subject, body);
             return Ok(new {message = "Mã OTP của bạn đã được gửi đi"});
+        }
+
+        [HttpPost("VerifyOTP/{username}/{otp}")]
+        public async Task<IActionResult> VerifyOTP(string username, string otp)
+        {
+            try
+            {
+                var user = await _userManager.FindByNameAsync(username);
+                if (user.OTP == null || user.OTP != otp)
+                {
+                    return Unauthorized(new { message = "Sai hoặc không tìm thấy OTP" });
+                }
+                if (user.OtpCreatedAt.HasValue && user.OtpCreatedAt.Value.AddMinutes(5) < DateTime.UtcNow) return Unauthorized(new { message = "OTP đã hết hạn" });
+                user.OTP = null;
+                user.OtpCreatedAt = null;
+                await _userManager.UpdateAsync(user);
+                return Ok(new { message = "Xác thực thành công" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken([FromBody] TokenRequestDTO request)
@@ -288,6 +332,42 @@ namespace DoAnTotNghiep.Controllers
                 RefreshTokenExpiryTime = user.RefreshTokenExpiryTime
             });
         }
-
+        [HttpPost("ChangePassword")]
+        public async Task<IActionResult> ChangePassword(ChangePasswordDTOs changePasswordDTOs)
+        {
+            try
+            {
+                var user = await _userManager.FindByNameAsync(changePasswordDTOs.UserName);
+                if (user != null)
+                {
+                    var removeresult = await _userManager.RemovePasswordAsync(user);
+                    if (removeresult.Succeeded) 
+                    {
+                        var addresult = await _userManager.AddPasswordAsync(user, changePasswordDTOs.Password);
+                        if (addresult.Succeeded)
+                        {
+                            return Ok(new { message = "Đổi mật khẩu thành công, vui lòng đăng nhập lại" });
+                        }
+                    }
+                }
+                return BadRequest(new { message = "Đã có lỗi xảy ra" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+        [Authorize]
+        [HttpGet("GetVip")]
+        public async Task<IActionResult> GetVip()
+        {
+            var UserName = User.Identity?.Name;
+            var user = await _userManager.FindByNameAsync(UserName!);
+            if (user != null) 
+            {
+                return Ok(user.IsVip);
+            }
+            return BadRequest(new { message = "Không tìm thấy người dùng" });
+        }
     }
 }

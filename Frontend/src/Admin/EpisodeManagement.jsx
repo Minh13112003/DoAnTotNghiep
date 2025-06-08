@@ -8,6 +8,11 @@ import Navbar from '../Dashboard/Navbar';
 import Footer from '../Dashboard/Footer';
 import './AdminStyles.css';
 import { toast } from 'react-toastify';
+import Cookies from 'js-cookie';
+import Select from 'react-select';
+import {GetAllLinkMovie, DeleteLinkMovie, AddLinkMovie, GetLinkMovieByIdMovie, UpdateLinkMovie } from '../apis/linkmovieAPI';
+import { GetAllMovie } from '../apis/movieAPI';
+import { slidebarMenus } from './slidebar';
 
 const EpisodeManagement = () => {
     const navigate = useNavigate();
@@ -32,85 +37,7 @@ const EpisodeManagement = () => {
         urlMovie: ''
     });
 
-    // Thêm định nghĩa sidebarMenus
-    const sidebarMenus = [
-        {
-            title: 'Quản lý Phim',
-            icon: <FaFilm />,
-            items: [
-                {
-                    title: 'Danh sách phim',
-                    link: '/quan-ly/phim/danh-sach'
-                },
-                {
-                    title: 'Danh sách tập phim',
-                    link: '/quan-ly/phim/tap-phim'
-                }
-            ]
-        },
-        {
-            title: 'Quản lý Thể loại',
-            icon: <FaList />,
-            items: [
-                {
-                    title: 'Danh sách thể loại',
-                    link: '/quan-ly/the-loai/danh-sach'
-                },
-                {
-                    title: 'Thêm thể loại',
-                    link: '/quan-ly/the-loai/them-moi'
-                }
-            ]
-        },
-        {
-            title: 'Quản lý Tập phim',
-            icon: <FaFilm />,
-            items: [
-                {
-                    title: 'Danh sách tập phim',
-                    link: '/quan-ly/tap-phim/danh-sach'
-                }
-            ]
-        },
-        {
-            title: 'Quản lý Tài khoản',
-            icon: <FaUsers />,
-            items: [
-                {
-                    title: 'Danh sách người dùng',
-                    link: '/quan-ly/tai-khoan/danh-sach'
-                },
-                {
-                    title: 'Thêm người dùng',
-                    link: '/quan-ly/tai-khoan/them-moi'
-                }
-            ]
-        },
-        {
-            title: 'Quản lý Bình luận',
-            icon: <FaList />,
-            items: [
-                {
-                    title: 'Danh sách bình luận',
-                    link: '/quan-ly/binh-luan'
-                },
-                {
-                    title: 'Bình luận bị báo cáo',
-                    link: '/quan-ly/binh-luan/bao-cao'
-                }
-            ]
-        },
-        {
-            title: 'Quản lý Góp ý',
-            icon: <FaList />,
-            items: [
-                {
-                    title: 'Danh sách góp ý',
-                    link: '/quan-ly/gop-y'
-                }
-            ]
-        }
-    ];
+    // Thêm định nghĩa sidebarMenus   
 
     useEffect(() => {
         fetchEpisodes();
@@ -119,7 +46,8 @@ const EpisodeManagement = () => {
 
     const fetchEpisodes = async () => {
         try {
-            const response = await axios.get('http://localhost:5285/api/linkmovie/GetAllLinkMovie');
+            // const response = await axios.get('http://localhost:5285/api/linkmovie/GetAllLinkMovie');
+            const response = await GetAllLinkMovie();
             // Sắp xếp dữ liệu
             const sortedData = response.data.sort((a, b) => {
                 // So sánh tên phim trước
@@ -138,13 +66,14 @@ const EpisodeManagement = () => {
 
     const fetchMovies = async () => {
         try {
-            const token = localStorage.getItem('userToken');
-            const response = await axios.get('http://localhost:5285/api/movie/ShowAllMovieCategory', {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            setMovieList(response.data);
+            // const token = Cookies.get('accessToken');
+            // const response = await axios.get('http://localhost:5285/api/movie/ShowAllMovieCategory', {
+            //     headers: {
+            //         Authorization: `Bearer ${token}`
+            //     }
+            // });
+            const response = await GetAllMovie(currentPage, itemsPerPage);
+            setMovieList(response.data.movies);
         } catch (error) {
             console.error('Error fetching movies:', error);
             toast.error('Không thể tải danh sách phim');
@@ -175,22 +104,24 @@ const EpisodeManagement = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const token = localStorage.getItem('userToken');
+            // const token = Cookies.get('accessToken');
             if (selectedEpisode) {
                 // Cập nhật tập phim
-                await axios.put('http://localhost:5285/api/linkmovie/AddLinkMovie', formData, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
+                // await axios.put('http://localhost:5285/api/linkmovie/UpdateLinkMovie', formData, {
+                //     headers: {
+                //         Authorization: `Bearer ${token}`
+                //     }
+                // });
+                await UpdateLinkMovie(formData);
                 toast.success('Cập nhật tập phim thành công!');
             } else {
                 // Thêm tập phim mới
-                await axios.post('http://localhost:5285/api/linkmovie/AddLinkMovie', formData, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
+                // await axios.post('http://localhost:5285/api/linkmovie/AddLinkMovie', formData, {
+                //     headers: {
+                //         Authorization: `Bearer ${token}`
+                //     }
+                // });
+                await AddLinkMovie(formData);
                 toast.success('Thêm tập phim mới thành công!');
             }
             fetchEpisodes();
@@ -204,12 +135,13 @@ const EpisodeManagement = () => {
     const handleDelete = async (idLinkMovie) => {
         if (window.confirm('Bạn có chắc muốn xóa tập phim này?')) {
             try {
-                const token = localStorage.getItem('userToken');
-                await axios.delete(`http://localhost:5285/api/linkmovie/DeleteLinkMovie/${idLinkMovie}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
+                // const token = localStorage.getItem('userToken');
+                // await axios.delete(`http://localhost:5285/api/linkmovie/DeleteLinkMovie/${idLinkMovie}`, {
+                //     headers: {
+                //         Authorization: `Bearer ${token}`
+                //     }
+                // });
+                await DeleteLinkMovie(idLinkMovie);
                 fetchEpisodes();
                 toast.success('Xóa tập phim thành công!');
             } catch (error) {
@@ -258,6 +190,10 @@ const EpisodeManagement = () => {
         setSelectedBackground(background);
         setShowBackgroundModal(true);
     };
+    const options = movieList.map(movie => ({
+        value: movie.id,
+        label: movie.title
+      }));
 
     return (
         <div>
@@ -281,7 +217,7 @@ const EpisodeManagement = () => {
                             Quay lại Dashboard
                         </Button>
                     </div>
-                    {sidebarMenus.map((menu, index) => (
+                    {slidebarMenus.map((menu, index) => (
                         <div key={index} className="sidebar-menu-item">
                             <div className="sidebar-menu-header">
                                 {menu.icon}
@@ -417,18 +353,26 @@ const EpisodeManagement = () => {
                                 <Form onSubmit={handleSubmit}>
                                     <Form.Group className="mb-3">
                                         <Form.Label>Phim</Form.Label>
-                                        <Form.Select
+                                        {/* <Form.Select
                                             value={formData.idMovie}
                                             onChange={(e) => setFormData({...formData, idMovie: e.target.value})}
                                             required
                                         >
                                             <option value="">Chọn phim</option>
-                                            {movieList.map(movie => (
+                                            {movieList?.map(movie => (
                                                 <option key={movie.id} value={movie.id}>
                                                     {movie.title}
                                                 </option>
                                             ))}
-                                        </Form.Select>
+                                        </Form.Select> */}
+                                        <Select
+                                            options={options}
+                                            value={options.find(option => option.value === formData.idMovie) || null}
+                                            onChange={(selected) => setFormData({...formData, idMovie: selected?.value || ''})}
+                                            placeholder="Chọn phim..."
+                                            isClearable
+                                            isDisabled={!!selectedEpisode}
+                                        />                                        
                                     </Form.Group>
                                     <Form.Group className="mb-3">
                                         <Form.Label>Tập</Form.Label>

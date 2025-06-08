@@ -1,19 +1,23 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Spinner } from 'react-bootstrap';
-import { FaStar, FaHeart, FaEye, FaPlay, FaCalendar, FaUser, FaClock, FaLanguage, FaRocket } from 'react-icons/fa';
+import { Container, Row, Col, Card, Button, Badge, Spinner, Modal, Form } from 'react-bootstrap';
+import { FaUserTie, FaHeart, FaEye, FaPlay, FaCalendar, FaTheaterMasks, FaClock, FaLanguage, FaRocket, FaComment, FaStar } from 'react-icons/fa';
 import { MdHighQuality } from 'react-icons/md';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import slugify from '../Helper/Slugify';
-import axios from 'axios';
 import Navbar from '../Dashboard/Navbar';
 import Footer from '../Dashboard/Footer';
 import { DataContext } from '../ContextAPI/ContextNavbar';
 import './DetailsMovie.css';
 import { toast } from 'react-toastify';
-import CommentSection from './CommentSection'
+import CommentSection from './CommentSection';
+import { GetMovieByTitle, FavoriteMovies, ToggleFavoriteMovie, AddHistory } from '../apis/movieAPI';
+import Cookies from 'js-cookie';
+import { GetVip } from '../apis/authAPI';
+import { UpReport } from '../apis/reportAPI';
+import { AddRating, GetRating } from '../apis/ratingAPI';
 
 const DetailsMovie = () => {
-    const { idAndSlug  } = useParams();
+    const { idAndSlug } = useParams();
     const [id, slugTitle] = idAndSlug.split('__');
     const navigate = useNavigate();
     const { categories, movieTypes, nations, statuses, statusMap } = useContext(DataContext);
@@ -22,50 +26,70 @@ const DetailsMovie = () => {
     const [loadingFavorite, setLoadingFavorite] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [feedbackContent, setFeedbackContent] = useState('');
+    const [feedbackLoading, setFeedbackLoading] = useState(false);
+    const [showRatingModal, setShowRatingModal] = useState(false);
+    const [rating, setRating] = useState(0);
+    const [hoverRating, setHoverRating] = useState(0);
+    const [ratingLoading, setRatingLoading] = useState(false);
+    const [userRating,setUserRating] = useState(0);
+    const [newRating, setNewRating] = useState(0);
+    const [hasRated, setHasRated] = useState(false);
+
     const isAuthenticated = () => {
-        const token = localStorage.getItem('userToken');
-        return !!token;
+        return !!Cookies.get('accessToken');
     };
-    
 
     useEffect(() => {
         const fetchMovie = async () => {
             try {
-                const response = await axios.get(`http://localhost:5285/api/movie/GetMovieBySlugTitle/${slugTitle}`);
-                setMovie(response.data[0]);
-                console.log(response.data);
+                // Lấy thông tin phim
+                const movieResponse = await GetMovieByTitle(slugTitle);
+                setMovie(movieResponse.data[0]);
+
+                // Lấy đánh giá của người dùng nếu đã đăng nhập
+                if (isAuthenticated()) {
+                    const ratingResponse = await GetRating(id);
+                    if (ratingResponse.data && ratingResponse.data.rating >= 0) {
+                        console.log(ratingResponse.data.rating);
+                        setUserRating(ratingResponse.data.rating);
+                        setRating(ratingResponse.data.rating);
+                        setHasRated(true);
+                    } else {
+                        console.log("hi");
+                        setUserRating(null);
+                        setHasRated(false);
+                    }
+                }
             } catch (error) {
-                console.error('Error fetching movie:', error);
-                toast.error('Không thể tải thông tin phim');
-            }
+                console.error('Error fetching movie or rating:', error);
+                toast.error('Không thể tải thông tin phim hoặc đánh giá');
+            };
         };
         fetchMovie();
     }, [id, slugTitle]);
 
-    useEffect(() => {
-        const checkFavorite = async () => {
-            if (!isAuthenticated() || !movie) return;
-        
-            try {
-                const token = localStorage.getItem('userToken');
-                const response = await axios.get('http://localhost:5285/api/movie/FavoriteMovies', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-        
-                const favorites = response.data || [];   
-                const favoriteSlugs = favorites.map(fav => slugify(fav.title) || ''); // map ra list slug
-                setIsFavorite(favoriteSlugs.includes((slugify(movie.title)))); // kiểm tra bằng slugTitle
-            } catch (error) {
-                console.error('Error checking favorite:', error);
-                if (error.response?.status === 401) {
-                    localStorage.removeItem('userToken');
-                    localStorage.removeItem('userData');
-                }
-            }
-        };
+    const checkFavorite = async () => {
+        if (!isAuthenticated() || !movie) return;
 
+        try {
+            const response = await FavoriteMovies(1,50000000);
+            const favorites = response.data.movies || [];
+            const favoriteSlugs = favorites.map(fav => slugify(fav.title) || '');
+            setIsFavorite(favoriteSlugs.includes(slugTitle)); // So sánh với slugTitle từ URL
+        } catch (error) {
+            console.error('Error checking favorite:', error);
+            if (error.response?.status === 401) {
+                Cookies.remove('accessToken');
+                Cookies.remove('username');
+                localStorage.removeItem('userData');
+                navigate('/tai-khoan/auth');
+            }
+        }
+    };
+
+    useEffect(() => {
         checkFavorite();
     }, [movie, id]);
 
@@ -75,31 +99,19 @@ const DetailsMovie = () => {
             navigate('/tai-khoan/auth');
             return;
         }
-    
+
         try {
             setLoadingFavorite(true);
-            const token = localStorage.getItem('userToken');
-            await axios.post(
-                `http://localhost:5285/api/movie/ToggleFavoriteMovie/${slugmovie}`,
-                {},
-                {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                }
-            );
+            const response = await ToggleFavoriteMovie(slugTitle);
+            setIsFavorite(response.data.isFavorite); // Sử dụng trạng thái từ API
+            toast.success(response.data.message);
             
-            setIsFavorite(prev => {
-                const newFavorite = !prev;
-                toast.success(newFavorite ? 'Đã thêm vào danh sách yêu thích' : 'Đã bỏ yêu thích phim');
-                return newFavorite;
-            });
-    
         } catch (error) {
             console.error('Error toggling favorite:', error);
             if (error.response?.status === 401) {
                 toast.error('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại');
-                localStorage.removeItem('userToken');
+                Cookies.remove('accessToken');
+                Cookies.remove('refreshToken');
                 localStorage.removeItem('userData');
                 navigate('/tai-khoan/auth');
             } else {
@@ -109,39 +121,42 @@ const DetailsMovie = () => {
             setLoadingFavorite(false);
         }
     };
+
     const HandleSeeMovieButton = async () => {
         const url = movie.numberOfMovie > 1 
             ? `/xem-phim/${movie.id}__${slugify(movie.title)}__Tap_1`
             : `/xem-phim/${movie.id}__${slugify(movie.title)}`;
-        if (!isAuthenticated()) {           
+
+        if (!isAuthenticated()) {
+            if(movie.isVip === true){
+                toast.error("Phim này thuộc phim Vip, xin vui lòng đăng nhập và nâng cấp Vip");
+                return;
+            }
             navigate(url);
             return;
         }
 
-        setLoading(true);
-        setError(null);
+        if (movie.statusText === "Chưa có lịch"){
+            toast.error('Phim chưa có tập, xin vui lòng chờ');
+            return;
+        }
 
         try {
-            const token = localStorage.getItem('userToken');
-            const response = await fetch('http://localhost:5285/api/movie/AddHistory', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    idMovie: movie.id
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to add history');
+            const isVip = await GetVip();
+            if(isVip.data === false && movie.isVip === true){
+                toast.error("Phim này thuộc phim Vip, xin vui lòng nâng cấp Vip để thưởng thức");
+                return;
             }
 
-            const data = await response.json();
-            console.log('API response:', data);
-
-            // Sau khi thành công, điều hướng tới trang xem phim
+            setLoading(true);
+            setError(null);
+            
+            const param = {idMovie : movie.id};
+            const response = await AddHistory(param);
+            if (response.status != 200) {
+                throw new Error('Failed to add history');
+            }
+            
             navigate(url);
         } catch (err) {
             setError(err.message);
@@ -152,6 +167,113 @@ const DetailsMovie = () => {
         }
     };
 
+    const handleFeedbackSubmit = async () => {
+        if (!feedbackContent.trim()) {
+            toast.error('Vui lòng nhập nội dung góp ý/báo cáo');
+            return;
+        }
+
+        setFeedbackLoading(true);
+        try {
+            const payload = {
+                slugMovie : slugTitle,
+                content: feedbackContent
+            }
+            const response = await UpReport(payload);
+            if (response.status !== 200) {
+                setShowFeedbackModal(false);
+                setFeedbackContent('');
+                toast.error('Đã có lỗi');
+                return;
+            }
+
+            toast.success('Cảm ơn bạn đã góp ý/báo cáo!');
+            setShowFeedbackModal(false);
+            setFeedbackContent('');
+        } catch (error) {
+            console.error('Error sending feedback:', error);
+            toast.error('Có lỗi xảy ra khi gửi góp ý/báo cáo');
+        } finally {
+            setFeedbackLoading(false);
+        }
+    };
+    const handleRatingClick = () => {
+        if (!isAuthenticated()) {
+            toast.info('Vui lòng đăng nhập để đánh giá phim');
+            navigate('/tai_khoan/auth');
+            return;
+        }
+
+        setShowRatingModal(true);
+        if (userRating !== null) {
+            setRating(userRating);
+        } else {
+            setNewRating(0);
+        }
+        setHoverRating(0);
+    };
+
+    const handleStarHover = (star) => {
+        if (!hasRated) {
+            setHoverRating(star);
+        }
+    };
+
+    const handleStarClick = (star) => {
+        if (!hasRated) {
+            setNewRating(star);
+            console.log("Vô đây r ku");
+        }
+    };
+
+    const handleRatingSubmit = async () => {
+        if (hasRated) {
+            toast.info('Bạn đã đánh giá phim này!');
+            return;
+        }
+
+        if (newRating === 0) {
+            toast.warning('Vui lòng chọn để đánh giá!');
+            return;
+        }
+
+        if (!isAuthenticated()) {
+            toast.error('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại');
+            navigate('/tai_khoan/auth');
+            return;
+        }
+        console.log(hasRated + "+" + ratingLoading + "+" + newRating);
+        setRatingLoading(true);
+        try {
+            const payload = {
+                idMovie: id,
+                point: newRating
+            };
+            await AddRating(payload);
+            toast.success('Đánh giá của bạn đã được gửi thành công!');
+            setShowRatingModal(false);
+            setHasRated(true);
+            setUserRating(newRating);
+        } catch (err) {
+            console.error('Error sending rating:', err);
+            if (err?.response?.status === 401) {
+                toast.error('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại');
+                Cookies.remove('LoginToken');
+                navigate('/tai_khoan/auth');
+            } else {
+                toast.error(err.response.data.message || 'Có lỗi xảy ra khi gửi rating');
+            }
+        } finally {
+            setRatingLoading(false);
+        }
+    };
+    const handleStarLeave = () => {
+        if (!hasRated) {
+          setHoverRating(0); // Khi rời chuột, trở về 0 để hiển thị newRating hoặc 0
+        }
+      };
+
+
     if (!movie) return (
         <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
             <Spinner animation="border" variant="primary" />
@@ -161,7 +283,6 @@ const DetailsMovie = () => {
     return (
         <div>
             <Navbar categories={categories} movieTypes={movieTypes} nations={nations} statuses={statuses} statusMap={statusMap} />
-
             <div className="movie-details py-5" style={{
                 backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url(${movie.backgroundImage})`,
                 backgroundSize: 'cover',
@@ -183,24 +304,20 @@ const DetailsMovie = () => {
                                         objectFit: 'contain',
                                         backgroundColor: 'rgba(0, 0, 0, 0.5)'
                                     }}
-                                    
                                 />
-                                {movie.isVip === true || movie.isVip === 'true' ? (
+                                {movie.isVip && (
                                     <div className="vip-label">VIP</div>
-                                ) : null}
+                                )}
                             </Card>
                         </Col>
-
                         <Col md={8}>
                             <div className="text-white">
                                 <h1 className="mb-3">{movie.title}</h1>
-
                                 <div className="mb-4">
                                     <Badge bg="danger" className="me-2">{movie.statusText}</Badge>
                                     <Badge bg="primary" className="me-2">{movie.typeMovie}</Badge>
                                     <Badge bg="success">{movie.nation}</Badge>
                                 </div>
-
                                 <Row className="mb-4 g-3">
                                     <Col sm={6} md={4}>
                                         <div className="d-flex align-items-center">
@@ -229,45 +346,57 @@ const DetailsMovie = () => {
                                     <Col sm={6} md={4}>
                                         <div className="d-flex align-items-center">
                                             <FaRocket className="text-warning me-2" />
-                                            <span>
-                                                {movie.createdAtString} - Tập {movie.episode}
-                                            </span>
+                                            <span>{movie.createdAtString} - Tập {movie.episode}</span>
                                         </div>
                                     </Col>
-
+                                    <Col sm={6} md={4}>
+                                        <div className="d-flex align-items-center">
+                                            <FaUserTie className="text-warning me-2" />
+                                            <span>{movie.nameDirector}</span>
+                                        </div>
+                                    </Col>
                                 </Row>
-
+                                <Row>
+                                    <Col sm={12} md={4}>
+                                        <div className="d-flex align-items-center">
+                                            <FaTheaterMasks className="text-warning me-2" />
+                                            <span>{Array.isArray(movie.nameActors)
+                                                ? movie.nameActors.join(', ')
+                                                : typeof movie.nameActors === 'string'
+                                                ? movie.nameActors
+                                                : 'Không rõ'}</span>
+                                        </div>
+                                    </Col>
+                                </Row>
                                 <div className="mb-4">
                                     <h5 className="text-warning mb-3">Thể loại:</h5>
                                     <div>
                                         {movie.nameCategories.split(', ').map((category, index) => (
-                                            <Badge
-                                                bg="secondary"
-                                                className="me-2 mb-2"
-                                                key={index}
-                                            >
+                                            <Badge bg="secondary" className="me-2 mb-2" key={index}>
                                                 {category}
                                             </Badge>
                                         ))}
                                     </div>
                                 </div>
-
                                 <div className="mb-4">
                                     <h5 className="text-warning mb-3">Mô tả:</h5>
                                     <p>{movie.description}</p>
                                 </div>
-
                                 <div className="d-flex gap-3">
                                     <Button
                                         variant="danger"
                                         size="lg"
                                         className="d-flex align-items-center"
                                         onClick={HandleSeeMovieButton}
+                                        disabled={loading}
                                     >
-                                        <FaPlay className="me-2" />
+                                        {loading ? (
+                                            <Spinner animation="border" size="sm" className="me-2" />
+                                        ) : (
+                                            <FaPlay className="me-2" />
+                                        )}
                                         Xem Phim
                                     </Button>
-
                                     <Button
                                         variant={isFavorite ? "danger" : "outline-light"}
                                         size="lg"
@@ -283,19 +412,137 @@ const DetailsMovie = () => {
                                         )}
                                         {isFavorite ? "Bỏ yêu thích" : "Yêu thích"}
                                     </Button>
+                                    <Button
+                                        variant="outline-light"
+                                        size="lg"
+                                        className="d-flex align-items-center"
+                                        onClick={() => setShowFeedbackModal(true)}
+                                    >
+                                        <FaComment className="me-2" />
+                                        Góp ý/Báo cáo
+                                    </Button>
+                                    <Button 
+                                        variant="outline-light"
+                                        size="lg"
+                                        className="d-flex align-items-center"
+                                        onClick={() => setShowRatingModal(true)}
+                                        title={isAuthenticated ? 'Vui lòng đăng nhập để đánh giá phim!' : ''}
+                                    >
+                                        <FaStar className="me-auto" />
+                                        Đánh giá
+                                    </Button>
                                 </div>
-
                             </div>
                         </Col>
                     </Row>
                 </Container>
             </div>
-             {/* Thêm phần bình luận */}
-             <Container className="py-5 bg-white">
+            <Container className="py-5 bg-white">
                 <CommentSection movieId={movie.id} movieTitle={movie.title} />
             </Container>
-
             <Footer />
+
+            {/* Modal Góp ý/Báo cáo */}
+            <Modal show={showFeedbackModal} onHide={() => setShowFeedbackModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Góp ý/Báo cáo</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Tên phim</Form.Label>
+                            <Form.Control
+                                type="text"
+                                value={movie?.title || ''}
+                                disabled
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Nội dung góp ý/báo cáo</Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                rows={4}
+                                value={feedbackContent}
+                                onChange={(e) => setFeedbackContent(e.target.value)}
+                                placeholder="Nhập nội dung góp ý hoặc báo cáo của bạn..."
+                            />
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowFeedbackModal(false)}>
+                        Hủy
+                    </Button>
+                    <Button 
+                        variant="primary" 
+                        onClick={handleFeedbackSubmit}
+                        disabled={feedbackLoading}
+                    >
+                        {feedbackLoading ? (
+                            <>
+                                <Spinner animation="border" size="sm" className="me-2" />
+                                Đang gửi...
+                            </>
+                        ) : (
+                            'Gửi'
+                        )}
+                    </Button>
+                </Modal.Footer>
+                </Modal>
+                <Modal show={showRatingModal} onHide={() => setShowRatingModal(false)} centered>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Đánh giá</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                    <Form>
+                        <Form.Group className="mb-3">
+                        <Form.Label>Tên phim</Form.Label>
+                        <Form.Control type="text" value={movie.title} disabled />
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                        <Form.Label>Đánh giá của bạn</Form.Label>
+                        <div className="d-flex align-items-center">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                            <FaStar
+                                key={star}
+                                size={30}
+                                color={(hoverRating || newRating || rating) >= star ? '#ffc107' : '#e4e5e9'} // Dùng newRating hoặc hoverRating
+                                style={{ cursor: hasRated ? 'default' : 'pointer' }}
+                                onMouseEnter={() => handleStarHover(star)}
+                                onMouseLeave={handleStarLeave} // Thêm sự kiện mouse leave
+                                onClick={() => handleStarClick(star)}
+                            />
+                            ))}
+                            <span className="ms-2">
+                            {(hoverRating || newRating || rating) > 0 ? `${hoverRating || newRating|| rating} sao` : 'Chưa chọn'}
+                            </span>
+                        </div>
+                        {hasRated && (
+                            <p className="text-muted mt-2">Bạn đã đánh giá {userRating} sao cho phim này.</p>
+                        )}
+                        </Form.Group>
+                    </Form>
+                    </Modal.Body>
+                    <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowRatingModal(false)}>
+                        Hủy
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={handleRatingSubmit} // Gọi hàm submit
+                        disabled={hasRated  || ratingLoading  || newRating === 0}
+                    >
+                        {ratingLoading ? (
+                        <>
+                            <Spinner animation="border" size="sm" className="me-2" />
+                            Đang gửi...
+                        </>
+                        ) : (
+                        'Gửi đánh giá'
+                        )}
+                    </Button>
+            </Modal.Footer>
+        </Modal>
         </div>
     );
 };

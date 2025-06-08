@@ -84,7 +84,21 @@ namespace DoAnTotNghiep.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
-    
+        [Authorize(Roles = "Admin")]
+        [HttpGet("GetAllComment")]
+        public async Task<IActionResult> GetAllComment()
+        {
+            try
+            {
+                var UserName = User.Identity?.Name;
+                var comment = await _commentServices.GetAllComment(UserName!);
+                if (comment == null) return BadRequest(new { message = "Đã có lỗi xảy ra" });
+                return Ok(comment);
+            }catch(Exception ex)
+            {
+                return StatusCode(500,ex.Message);
+            }
+        }
 
     }
 }

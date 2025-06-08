@@ -19,14 +19,24 @@ namespace DoAnTotNghiep.Services
             return await _commentRepository.AddComment(username, commentDTOs);
         }
 
-        public Task<bool> DeleteComment(string role, string username, string Idcomment)
+        public async Task<bool> DeleteComment(string role, string username, string Idcomment)
         {
-            return _commentRepository.DeleteComment(role, username, Idcomment);
+            return await _commentRepository.DeleteComment(role, username, Idcomment);
+        }
+
+        public async Task<List<CommentToShowDTOs>> GetAllComment(string UserName)
+        {
+            return await _commentRepository.GetAllComment(UserName);
         }
 
         public async Task<List<Comment>> GetCommentByMovie(string slugMovie)
         {
             return await _commentRepository.GetCommentByMovie(slugMovie);
+        }
+
+        public Task<List<Comment>> GetCommentReport()
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<bool> UpdateComment(string username, CommentUpdateDTOs commentDTOs)

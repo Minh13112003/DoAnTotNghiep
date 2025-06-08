@@ -42,6 +42,16 @@ namespace DoAnTotNghiep.Controllers
             {
                 return StatusCode(500, ex.Message);
             }
-        } 
+        }
+        [HttpGet("MoviePointView")]
+        public async Task<IActionResult> GetMoviePointView([FromQuery] string sortBy = "point")
+        {
+            var movie = await _mixAPIService.GetMovieAndPoint(sortBy);
+            if (movie.Count > 0)
+            {
+                return Ok(movie);
+            }
+            return BadRequest(new { message = "Chưa có phim" });
+        }
     }
 }

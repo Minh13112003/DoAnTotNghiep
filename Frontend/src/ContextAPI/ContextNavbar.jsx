@@ -1,8 +1,10 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import axios from "axios";
+import { apiService } from "../utils/interceptorAxios";
 import _ from "lodash";
+import { GetDashboard, SearchMovie } from "../apis/movieAPI";
 
 const DataContext = createContext();
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const DataProvider = ({ children }) => {
     const [categories, setCategories] = useState([]);
@@ -39,9 +41,11 @@ const DataProvider = ({ children }) => {
 
     // Fetch dữ liệu cho Dashboard
     useEffect(() => {
-        axios.get("http://localhost:5285/api/mixapi/getCategoryAndMovieType")
-            .then(response => {
+        const fetchDashboardData = async () => {
+            try {
+                const response = await GetDashboard();
                 const data = response.data;
+                
                 setCategories(data.category || []);
                 setMovieTypes(data.movieTypes || []);
                 setNations(data.nations || []);
@@ -50,12 +54,16 @@ const DataProvider = ({ children }) => {
                 const processedMovies = processMovieData(data.movie || []);
                 const processedNewestMovie = processMovieData(data.updateNewestMovie || []);
                 const processedFinishedMovie = processMovieData(data.finishedMovie || []);
+                
                 setDashboardMovies(processedMovies);
                 setNewestMovies(processedNewestMovie);
                 setFinishedMovies(processedFinishedMovie);
+            } catch (error) {
+                console.error("Lỗi khi lấy dữ liệu dashboard:", error);
+            }
+        };
 
-            })
-            .catch(error => console.error("Lỗi khi lấy dữ liệu dashboard:", error));
+        fetchDashboardData();
     }, []);
 
     // Fetch dữ liệu cho Search
@@ -65,10 +73,12 @@ const DataProvider = ({ children }) => {
             return;
         }
         try {
-            const response = await axios.get(
-                `http://localhost:5285/api/movie/SearchMovie?Keyword=${searchKeyword}`
-            );
-            const processedMovies = processMovieData(response.data);
+            // const response = await axios.get(
+            //     `${apiUrl}/movie/SearchMovie?Keyword=${searchKeyword}`);
+            
+            const response = await SearchMovie(searchKeyword, 1, 10);
+
+            const processedMovies = processMovieData(response.data.movies);
             setSearchMovies(processedMovies);
         } catch (error) {
             console.error("Lỗi khi tìm kiếm phim:", error);
@@ -76,7 +86,7 @@ const DataProvider = ({ children }) => {
         }
     };
 
-    const debouncedSearch = _.debounce(fetchSearchMovies, 2000);
+    const debouncedSearch = _.debounce(fetchSearchMovies, 1000);
 
     useEffect(() => {
         debouncedSearch(keyword);

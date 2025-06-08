@@ -7,7 +7,7 @@
         public string Description { get; set; } = string.Empty;
         public string Nation { get; set; } = string.Empty;
         public string TypeMovie { get; set; } = string.Empty;
-        public string StatusText { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
         public string NameCategories { get; set; } = string.Empty;
         public int Duration { get; set; }
         public string Quality { get; set; } = string.Empty;

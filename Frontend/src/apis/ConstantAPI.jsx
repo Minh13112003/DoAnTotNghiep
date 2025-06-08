@@ -1,0 +1,67 @@
+export const URL_BASE = import.meta.env.VITE_API_URL;
+
+// Auth API
+export const URL_Login = `${URL_BASE}/account/login`;
+export const URL_Register = `${URL_BASE}/account/register`;
+export const URL_Profie = `${URL_BASE}/account/userinfor`;
+export const URL_SendOTP = `${URL_BASE}/account/sendOTP`;
+export const URL_VerifyOTP = `${URL_BASE}/account/verifyOTP`;
+export const URL_ResetPassword = `${URL_BASE}/account/ChangePassword`;
+export const URL_GetVip = `${URL_BASE}/account/GetVip`;
+
+// Movie API
+
+export const URL_SearchMovie = `${URL_BASE}/movie/SearchMovie`;
+export const URL_GetMovieBySlugType = `${URL_BASE}/movie/GetMovieBySlugType`;       
+export const URL_GetMovieBySlugCategory = `${URL_BASE}/movie/GetMovieBySlugCategory`;
+export const URL_GetMovieBySlugNation = `${URL_BASE}/movie/GetMovieBySlugNation`;
+export const URL_GetMovieByFavorite = `${URL_BASE}/movie/FavoriteMovies`;
+export const URL_GetMovieByHistory = `${URL_BASE}/movie/GetHistoryMovie`;
+export const URL_GetMovieByStatus = `${URL_BASE}/movie/GetMovieByStatus`;
+export const URL_GetMovieByType = `${URL_BASE}/movie/GetMovieByType`;
+export const URL_AddMovie = `${URL_BASE}/movie/addmovie`;
+export const URL_DeleteMovie = `${URL_BASE}/movie/delete`;
+export const URL_AdvanceSearch = `${URL_BASE}/movie/AdvanceSearch`;
+export const URL_NewestMovie = `${URL_BASE}/movie/GetNewestMovie`;
+export const URL_GetAllMovie = `${URL_BASE}/movie/ShowAllMovieCategory`;
+export const URL_GetMovieByTitle = `${URL_BASE}/movie/GetMovieBySlugTitle`;
+export const URL_ToggleMovie = `${URL_BASE}/movie/ToggleFavoriteMovie`;
+export const URL_AddHistory = `${URL_BASE}/movie/AddHistory`;
+export const URL_UpdateMovie = `${URL_BASE}/movie/update`;
+export const URL_GetMovieById = `${URL_BASE}/movie/GetMovieById`
+
+//Report API
+export const URL_Upreport = `${URL_BASE}/report/UpReport`;
+
+//Comment API
+export const URL_AddComment = `${URL_BASE}/comment/AddComment`;
+export const URL_GetComment = `${URL_BASE}/comment/GetCommentBySlugTitle`;
+export const URL_UpdateComment = `${URL_BASE}/comment/UpdateComment`;
+export const URL_DeleteComment = `${URL_BASE}/comment/DeleteComment`;
+
+//Payment API
+export const URL_CreatePayment = `${URL_BASE}/payment/Payos/create-payment`;
+export const URL_GetPaymentOrder = `${URL_BASE}/payment/Payos/GetPaymentOrder`;
+export const URL_DetailPayment = `${URL_BASE}/payment/Payos/GetDetailPayment`;
+
+//LinkMovie API
+export const URL_GetAllLinkMovie = `${URL_BASE}/linkmovie/GetAllLinkMovie`;
+export const URL_AddLinkMovie = `${URL_BASE}/linkmovie/AddLinkMovie`;
+export const URL_UpdateLinkMovie = `${URL_BASE}/linkmovie/UpdateLinkMovie`;
+export const URL_DeleteLinkMovie = `${URL_BASE}/linkmovie/DeleteMovie`;
+export const URL_GetLinkMovieById = `${URL_BASE}/linkmovie/GetLinkMovieByIdMovie`;
+
+//RatingAPI
+export const URL_AddRating = `${URL_BASE}/movierating/AddRating`;
+export const URL_GetRating = `${URL_BASE}/movierating/GetRating`;
+
+//MixAPI
+export const URL_Navbar = `${URL_BASE}/mixapi/getCategoryAndMovieType`;
+export const URL_GetCategoryAndMovieType = `${URL_BASE}/mixapi/getNumberOfMovieAndCategory`;
+export const URL_GetNumberMix = `${URL_BASE}/mixapi/MoviePointView`;
+
+//CategoryAPI
+export const URL_GetAllCategory = `${URL_BASE}/category/getall`;
+export const URL_UpdateCategory = `${URL_BASE}/category/update`;
+export const URL_AddCategory = `${URL_BASE}/category/addCategory`;
+export const URL_DeleteCategory = `${URL_BASE}/category/deleteCategory`;

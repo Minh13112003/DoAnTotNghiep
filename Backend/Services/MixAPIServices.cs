@@ -1,4 +1,5 @@
 ﻿
+using DoAnTotNghiep.DTOs;
 using DoAnTotNghiep.Repository;
 
 namespace DoAnTotNghiep.Services
@@ -14,6 +15,11 @@ namespace DoAnTotNghiep.Services
         public async Task<dynamic> GetcountMovieAndCategory()
         {
             return await _mixAPIRepository.GetcountMovieAndCategory();
+        }
+
+        public async Task<List<MoviePointViewDTO>> GetMovieAndPoint(string sortBy)
+        {
+            return await _mixAPIRepository.GetMovieAndPoint(sortBy);
         }
 
         public async Task<dynamic> GetMovieTypeAndCategory()

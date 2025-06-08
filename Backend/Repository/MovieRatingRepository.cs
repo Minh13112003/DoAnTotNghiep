@@ -2,6 +2,7 @@
 using DoAnTotNghiep.Helper.RatingResult;
 using DoAnTotNghiep.Model;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 
 namespace DoAnTotNghiep.Repository
@@ -47,6 +48,19 @@ namespace DoAnTotNghiep.Repository
             }
             return AddRatingResult.AlreadyRated;
         }
-        
+
+        public async Task<int> GetRating(string IdMovie, string UserName)
+        {
+            if (string.IsNullOrEmpty(IdMovie) || string.IsNullOrEmpty(UserName))
+            {
+                return -2;
+            }
+            else
+            {
+                var rating = await _databaseContext.MovieRatings.FirstOrDefaultAsync(i => i.IdMovie == IdMovie && i.UserName == UserName);
+                if (rating == null) return -1;
+                else return rating.RatePoint;
+            }
+        }
     }
 }

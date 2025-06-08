@@ -14,5 +14,10 @@ namespace DoAnTotNghiep.Services
         {
             return await _repository.AddRating(IdMovie, UserName, point);
         }
+
+        public async Task<int> GetRating(string IdMovie, string UserName)
+        {
+            return await _repository.GetRating(IdMovie, UserName);
+        }
     }
 }

@@ -17,6 +17,17 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
 import EpisodeManagement from './Admin/EpisodeManagement';
 import ErrorPage from './ErrorPage';
+import ListHistoryFilm from './ListMovie/ListHistoryFilm';
+import ListSearchAdvance from './ListMovie/ListSearchAdvance';
+import ListNewestFilm from './ListMovie/ListNewestFilm';
+import ListAllFilm from './ListMovie/ListAllFilm';
+import ForgotPassword from './LoginAndRegis/ForgotPassword';
+import ListSearchFilm from './ListMovie/ListSearchFilm';
+import Payment from './Payment/Payment';
+import PaymentSuccess from './Payment/PaymentSuccess';
+import PaymentCancel from './Payment/PaymentCancel';
+import PaymentHistory from './Payment/PaymentHistory';
+import CommentManagement from './Admin/CommentManagement';
 
 function App() {
   return (
@@ -36,10 +47,21 @@ function App() {
           <Route path='/xem-phim/:idAndSlug' element={<SeeMovie/>}/>
           <Route path='/quan-ly' element={<DashBoardAdmin/>}/>
           <Route path='/yeu-thich' element={<ListFavoriteFilm/>}/>
+          <Route path='/lich-su-xem' element={<ListHistoryFilm/>}/>
           <Route path='/quan-ly/phim/danh-sach' element={<MovieManagement/>}/>
           <Route path="/quan-ly/the-loai/danh-sach" element={<CategoryManagement />} />
           <Route path="/quan-ly/phim/tap-phim" element={<EpisodeManagement />} />
+          <Route path='/tim-kiem-nang-cao/:param' element={<ListSearchAdvance/>}/>
+          <Route path='/moi-cap-nhat' element={<ListNewestFilm/>}/>
           <Route path="*" element={<ErrorPage />} />
+          <Route path='/tat-ca-phim' element={<ListAllFilm/>}/>
+          <Route path='/quen-mat-khau' element={<ForgotPassword/>}/>
+          <Route path='/tim-kiem' element={<ListSearchFilm/>}/>
+          <Route path='/thanh-toan' element={<Payment/>}/>
+          <Route path="/thanh-toan/thanh-cong" element={<PaymentSuccess />} />
+          <Route path="/thanh-toan/huy" element={<PaymentCancel />} />
+          <Route path="/danh-sach-thanh-toan" element={<PaymentHistory />} />
+          <Route path="//quan-ly/binh-luan" element={<CommentManagement />} />
         </Routes>
       </Router>
     </DataProvider>
