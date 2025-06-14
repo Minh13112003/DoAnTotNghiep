@@ -32,6 +32,36 @@ namespace DoAnTotNghiep.Repository
             return false;
         }
 
+        public async Task<List<Report>> GetCommentReport(string IdComment, string UserName)
+        {
+            if (string.IsNullOrEmpty(IdComment) || string.IsNullOrEmpty(UserName)) return null;
+            var report = await _databaseContext.Reports.Where(i => i.IdComment == IdComment && ((i.UserNameAdminFix == UserName && i.Status != 2) || i.Status == 0)).ToListAsync();
+            if (report != null)
+            {
+                return report;
+            }
+            List<Report> reports = new List<Report>();
+            return reports;
+        }
+        public async Task<bool> ExecuteCommentReport(string IdComment, string UserName)
+        {
+            if (string.IsNullOrEmpty(IdComment) || string.IsNullOrEmpty(UserName)) return false;
+            var reports = await _databaseContext.Reports.Where(i => i.IdComment == IdComment && ((i.UserNameAdminFix == UserName && i.Status != 2) || i.Status == 0)).ToListAsync();
+            if (reports != null) 
+            {
+                foreach (var report in reports)
+                {
+                    report.UserNameAdminFix = UserName;
+                    report.Status = 1;
+                    await _databaseContext.SaveChangesAsync();
+                    
+                }
+                return true;
+            }
+            return false;
+        }
+        
+
         public async Task<List<ReportToShowDTOs>> GetReportAdmin(string UserNameAdminFix)
         {
 
@@ -86,6 +116,10 @@ namespace DoAnTotNghiep.Repository
                 var report = await _databaseContext.Reports.FirstOrDefaultAsync(r => r.IdReport == IdReport);
                 if (report != null)
                 {
+                    if(report.Status != 1)
+                    {
+                        return false;
+                    }
                     report.UserNameAdminFix = UserNameAdminFix;
                     report.Status = 1;
                 }
@@ -164,6 +198,56 @@ namespace DoAnTotNghiep.Repository
             }
 
             return false;
+        }
+
+        /*public async Task<bool> ResponseCommentReport(string IdComment, string UserName)
+        {
+            if (string.IsNullOrEmpty(IdComment) || string.IsNullOrEmpty(UserName)) return false;
+            var reports = await _databaseContext.Reports.Where(i => i.IdComment == IdComment && i.UserNameAdminFix == UserName || i.Status == 1).ToListAsync();
+            if (reports != null)
+            {
+                var comment = await _databaseContext.Comments.FirstOrDefaultAsync(i => i.IdComment == IdComment);
+                var movie = await _databaseContext.Movies.FirstOrDefaultAsync(i => i.IdMovie == comment.IdMovie);
+                foreach (var report in reports)
+                {
+                    
+                    report.Status = 2;
+                    report.TimeResponse = DateTimeHelper.GetdateTimeVNNow();
+                    report.Response = "Đã xử lý Comment : " + comment.Content + " của phim : " + movie.Title + " .Cám ơn bạn đã báo cáo";
+                }
+                return true;
+            }
+            return false;
+        }*/
+        public async Task<bool> ResponseCommentReports(List<ResponseReport> reportResponses, string UserName)
+        {
+            if (reportResponses == null || !reportResponses.Any() || string.IsNullOrEmpty(UserName))
+                return false;
+
+            var reportIds = reportResponses.Select(r => r.IdReport).ToList();
+
+            var reports = await _databaseContext.Reports
+                .Where(r => reportIds.Contains(r.IdReport) && r.UserNameAdminFix == UserName && r.Status == 1)
+                .ToListAsync();
+
+            foreach (var report in reports)
+            {
+                var input = reportResponses.FirstOrDefault(r => r.IdReport == report.IdReport);
+                if (input != null)
+                {
+                    var comment = await _databaseContext.Comments.FirstOrDefaultAsync(c => c.IdComment == report.IdComment);
+                    var movie = await _databaseContext.Movies.FirstOrDefaultAsync(m => m.IdMovie == comment.IdMovie);
+
+                    string defaultMessage = $"Đã xử lý Comment: {comment.Content} của phim: {movie.Title}. Cám ơn bạn đã báo cáo.";
+
+                    report.Status = 2;
+                    report.TimeResponse = DateTimeHelper.GetdateTimeVNNow();
+                    report.Response = string.IsNullOrWhiteSpace(input.Response) ? defaultMessage : input.Response;
+                }
+            }
+
+            await _databaseContext.SaveChangesAsync();
+            return true;
         }
     }
 }

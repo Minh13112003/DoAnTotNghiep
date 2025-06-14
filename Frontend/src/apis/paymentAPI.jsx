@@ -10,3 +10,6 @@ export const GetPaymentOrders = () => {
 export const GetDetailPayment = (orderCode) =>{
     return apiService.get(`${urls.URL_DetailPayment}/${orderCode}`);
 }
+export const CancelPayment = (orderCode) => {
+    return apiService.post(`${urls.URRL_CancelPayment}/${orderCode}`);
+}

@@ -8,6 +8,9 @@ export const URL_SendOTP = `${URL_BASE}/account/sendOTP`;
 export const URL_VerifyOTP = `${URL_BASE}/account/verifyOTP`;
 export const URL_ResetPassword = `${URL_BASE}/account/ChangePassword`;
 export const URL_GetVip = `${URL_BASE}/account/GetVip`;
+export const URL_ChangeInfor = `${URL_BASE}/account/ChangeAccountInfor`;
+export const URL_GetUser = `${URL_BASE}/account/GetAllUser`;
+export const URL_DeleteUser = `${URL_BASE}/account/delete`;
 
 // Movie API
 
@@ -32,17 +35,23 @@ export const URL_GetMovieById = `${URL_BASE}/movie/GetMovieById`
 
 //Report API
 export const URL_Upreport = `${URL_BASE}/report/UpReport`;
+export const URL_GetCommentReport = `${URL_BASE}/report/GetCommentReport`;
+export const URL_ExecuteReport = `${URL_BASE}/report/ExecuteReport`
+export const URL_ResponseCommentReport = `${URL_BASE}/report/ResponseCommentReport`
 
 //Comment API
 export const URL_AddComment = `${URL_BASE}/comment/AddComment`;
 export const URL_GetComment = `${URL_BASE}/comment/GetCommentBySlugTitle`;
 export const URL_UpdateComment = `${URL_BASE}/comment/UpdateComment`;
 export const URL_DeleteComment = `${URL_BASE}/comment/DeleteComment`;
+export const URL_GetAllComment = `${URL_BASE}/comment/GetAllComment`;
+
 
 //Payment API
 export const URL_CreatePayment = `${URL_BASE}/payment/Payos/create-payment`;
 export const URL_GetPaymentOrder = `${URL_BASE}/payment/Payos/GetPaymentOrder`;
 export const URL_DetailPayment = `${URL_BASE}/payment/Payos/GetDetailPayment`;
+export const URRL_CancelPayment = `${URL_BASE}/payment/Payos/CancelPayment`;
 
 //LinkMovie API
 export const URL_GetAllLinkMovie = `${URL_BASE}/linkmovie/GetAllLinkMovie`;
@@ -65,3 +74,8 @@ export const URL_GetAllCategory = `${URL_BASE}/category/getall`;
 export const URL_UpdateCategory = `${URL_BASE}/category/update`;
 export const URL_AddCategory = `${URL_BASE}/category/addCategory`;
 export const URL_DeleteCategory = `${URL_BASE}/category/deleteCategory`;
+
+//ImageAPI
+export const URL_UploadImage = `${URL_BASE}/profile/upload-Image`;
+export const URL_UploadAvatar = `${URL_BASE}/profile/upload-avatar`;
+export const URL_UploadBackground = `${URL_BASE}/profile/upload-Background`;

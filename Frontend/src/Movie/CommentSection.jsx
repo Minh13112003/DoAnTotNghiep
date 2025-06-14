@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, Card, Alert, Spinner, Modal } from 'react-bootstrap';
+import { Form, Button, Card, Alert, Spinner, Modal, Image } from 'react-bootstrap';
 import { FaUser, FaReply, FaThumbsUp, FaFlag, FaTrash, FaEdit } from 'react-icons/fa';
 import axios from 'axios';
 import './CommentSection.css';
 import slugify from '../Helper/Slugify';
 import Cookies from 'js-cookie';
-import  {UpComment, UpdateComment, DeleteComment, GetComment} from '../apis/commentAPI';
+import { UpComment, UpdateComment, DeleteComment, GetComment } from '../apis/commentAPI';
 import { UpReport } from '../apis/reportAPI';
+import { ProfileInfor } from '../apis/authAPI';
 import { toast } from 'react-toastify';
-
+import avatar_default from '../assets/images/avatar_default.png';
 
 const CommentSection = ({ movieId, movieTitle }) => {
     const [comments, setComments] = useState([]);
@@ -42,9 +43,49 @@ const CommentSection = ({ movieId, movieTitle }) => {
         try {
             setLoading(true);
             const slugTitle = slugify(movieTitle);
-            // const response = await axios.get(`http://localhost:5285/api/comment/GetCommentBySlugTitle/${slugTitle}`);
             const response = await GetComment(slugTitle);
-            setComments(response.data);
+
+            // Cache thông tin người dùng để tránh gọi API trùng lặp
+            const userInfoCache = new Map();
+
+            // Lấy thông tin người dùng cho từng bình luận
+            const commentsWithUserInfo = await Promise.all(
+                response.data.map(async (comment) => {
+                    let userInfo = userInfoCache.get(comment.idUserName);
+                    if (!userInfo) {
+                        try {
+                            const payload = { userName: comment.idUserName };
+                            const userResponse = await ProfileInfor(payload);
+                            userInfo = userResponse.data;
+                            userInfoCache.set(comment.idUserName, userInfo);
+                        } catch (err) {
+                            console.error(`Lỗi khi lấy thông tin người dùng ${comment.idUserName}:`, err);
+                            userInfo = { image: '', nickname: '' };
+                        }
+                    }
+                    return {
+                        ...comment,
+                        userImage: userInfo.image || '',
+                        userNickname: userInfo.nickname || comment.idUserName
+                    };
+                })
+            );
+
+            // Xử lý các bình luận trả lời (replies) nếu có
+            const processReplies = (comment) => {
+                if (comment.replies && comment.replies.length > 0) {
+                    comment.replies = comment.replies.map(reply => ({
+                        ...reply,
+                        userImage: userInfoCache.get(reply.idUserName)?.image || '',
+                        userNickname: userInfoCache.get(reply.idUserName)?.nickname || reply.idUserName
+                    }));
+                    comment.replies.forEach(processReplies);
+                }
+                return comment;
+            };
+
+            const processedComments = commentsWithUserInfo.map(processReplies);
+            setComments(processedComments);
             setLoading(false);
         } catch (err) {
             console.error('Lỗi khi tải bình luận:', err);
@@ -76,14 +117,7 @@ const CommentSection = ({ movieId, movieTitle }) => {
             const payload = {
                 slugTitle: slugTitle,
                 content: newComment
-            }
-            // await axios.post('http://localhost:5285/api/comment/AddComment', {
-            //     slugTitle: slugTitle,
-            //     content: newComment,
-            //     parentId: null
-            // }, {
-            //     headers: { Authorization: `Bearer ${token}` }
-            // });
+            };
             await UpComment(payload);
             setNewComment('');
             setError('');
@@ -103,16 +137,15 @@ const CommentSection = ({ movieId, movieTitle }) => {
         if (!replyText[parentId] || !replyText[parentId].trim()) return;
 
         try {
-            const token = localStorage.getItem('userToken');
-            await axios.post('http://localhost:5285/api/comments', {
-                movieId,
+            const token = Cookies.get('accessToken');
+            const slugTitle = slugify(movieTitle);
+            const payload = {
+                slugTitle: slugTitle,
                 content: replyText[parentId],
                 parentId
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            
-            setReplyText({...replyText, [parentId]: ''});
+            };
+            await UpComment(payload);
+            setReplyText({ ...replyText, [parentId]: '' });
             setReplyingTo(null);
             fetchComments();
         } catch (err) {
@@ -122,7 +155,7 @@ const CommentSection = ({ movieId, movieTitle }) => {
 
     const handleLike = async (commentId) => {
         try {
-            const token = localStorage.getItem('userToken');
+            const token = Cookies.get('accessToken');
             await axios.post(`http://localhost:5285/api/comments/${commentId}/like`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -145,17 +178,14 @@ const CommentSection = ({ movieId, movieTitle }) => {
 
         setReportLoading(true);
         try {
-
             const payload = {
                 idComment: selectedCommentId,
                 content: reportContent
             };
             const response = await UpReport(payload);
-            
             if (response.status !== 200) {
                 throw new Error('Failed to send report');
             }
-
             toast.success('Cảm ơn bạn đã báo cáo!');
             setShowReportModal(false);
             setReportContent('');
@@ -172,10 +202,6 @@ const CommentSection = ({ movieId, movieTitle }) => {
         if (!confirm('Bạn có chắc chắn muốn xóa bình luận này?')) return;
 
         try {
-            
-            // await axios.delete(`http://localhost:5285/api/comment/DeleteComment/${commentId}`, {
-            //     headers: { Authorization: `Bearer ${token}` }
-            // });
             await DeleteComment(commentId);
             fetchComments();
         } catch (err) {
@@ -187,22 +213,16 @@ const CommentSection = ({ movieId, movieTitle }) => {
         if (!editText.trim()) return;
 
         try {
-            
-            // await axios.put(`http://localhost:5285/api/comment/UpdateComment`, {
-            //     IdComment: commentId,
-            //     Content: editText
-            // }, {
-            //     headers: { Authorization: `Bearer ${token}` }
-            // });
             const payload = {
-                IdComment : commentId,
+                IdComment: commentId,
                 Content: editText
-            }
+            };
             await UpdateComment(payload);
             setEditingComment(null);
             setEditText('');
             fetchComments();
             setSuccessMessage('Sửa bình luận thành công!');
+            toast.success("Sửa bình luận thành công!");
             setTimeout(() => setSuccessMessage(''), 2000);
         } catch (err) {
             setError('Không thể chỉnh sửa bình luận. Vui lòng thử lại sau.');
@@ -214,20 +234,27 @@ const CommentSection = ({ movieId, movieTitle }) => {
         setEditText(comment.content);
     };
 
-    // Render một bình luận và các phản hồi của nó
     const renderComment = (comment, isReply = false) => {
         const isOwner = userData && userName === comment.idUserName;
-        
+
         return (
             <Card key={comment.idComment} className={`mb-3 ${isReply ? 'ms-5' : ''}`}>
                 <Card.Body>
                     <div className="d-flex align-items-start">
-                        <div className="comment-avatar">
-                            <FaUser size={24} />
-                        </div>
+                        <Image
+                            src={comment.userImage || avatar_default}
+                            roundedCircle
+                            style={{ 
+                                width: '40px', 
+                                height: '40px', 
+                                objectFit: 'cover',
+                                border: '1px solid #dee2e6'
+                            }}
+                            alt="Avatar"
+                        />
                         <div className="ms-3 flex-grow-1">
                             <div className="d-flex justify-content-between align-items-center">
-                                <h6 className="mb-1 fw-bold">{comment.idUserName}</h6>
+                                <h6 className="mb-1 fw-bold">{comment.userNickname}</h6>
                                 <small className="text-muted">{comment.timeComment}</small>
                             </div>
                             
@@ -265,22 +292,20 @@ const CommentSection = ({ movieId, movieTitle }) => {
                             <div className="d-flex gap-3 mt-2">
                                 <Button 
                                     variant="link" 
-                                    className="p-0 text-primary" 
-                                    onClick={() => handleLike(comment.id)}
-                                    disabled={!isLoggedIn}
-                                >
-                                    <FaThumbsUp className="me-1" /> {comment.likes || 0}
-                                </Button>
-                                
-                                <Button 
-                                    variant="link" 
-                                    className="p-0 text-secondary"
-                                    onClick={() => setReplyingTo(replyingTo === comment.idComment ? null : comment.idComment)}
+                                    className="p-0 text-primary"
+                                    onClick={() => setReplyingTo(comment.idComment)}
                                     disabled={!isLoggedIn}
                                 >
                                     <FaReply className="me-1" /> Trả lời
                                 </Button>
-                                
+                                <Button 
+                                    variant="link" 
+                                    className="p-0 text-success"
+                                    onClick={() => handleLike(comment.idComment)}
+                                    disabled={!isLoggedIn}
+                                >
+                                    <FaThumbsUp className="me-1" /> Thích
+                                </Button>
                                 <Button 
                                     variant="link" 
                                     className="p-0 text-danger"
@@ -310,22 +335,22 @@ const CommentSection = ({ movieId, movieTitle }) => {
                                 )}
                             </div>
                             
-                            {replyingTo === comment.id && (
+                            {replyingTo === comment.idComment && (
                                 <Form className="mt-3">
                                     <Form.Group>
                                         <Form.Control
                                             as="textarea"
                                             rows={2}
                                             placeholder="Viết phản hồi của bạn..."
-                                            value={replyText[comment.id] || ''}
-                                            onChange={(e) => setReplyText({...replyText, [comment.id]: e.target.value})}
+                                            value={replyText[comment.idComment] || ''}
+                                            onChange={(e) => setReplyText({...replyText, [comment.idComment]: e.target.value})}
                                         />
                                     </Form.Group>
                                     <div className="d-flex gap-2 mt-2">
                                         <Button 
                                             variant="primary" 
                                             size="sm"
-                                            onClick={() => handleReply(comment.id)}
+                                            onClick={() => handleReply(comment.idComment)}
                                         >
                                             Gửi phản hồi
                                         </Button>
@@ -340,7 +365,6 @@ const CommentSection = ({ movieId, movieTitle }) => {
                                 </Form>
                             )}
                             
-                            {/* Hiển thị các phản hồi */}
                             {comment.replies && comment.replies.map(reply => renderComment(reply, true))}
                         </div>
                     </div>
@@ -388,14 +412,13 @@ const CommentSection = ({ movieId, movieTitle }) => {
                 <>
                     <h5 className="mb-3">{comments.length} bình luận</h5>
                     {comments.filter(c => !c.parentId).map(comment => (
-                        <React.Fragment key={comment.id}>
+                        <React.Fragment key={comment.idComment}>
                             {renderComment(comment)}
                         </React.Fragment>
                     ))}
                 </>
             )}
 
-            {/* Modal Báo cáo */}
             <Modal show={showReportModal} onHide={() => setShowReportModal(false)} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>Báo cáo bình luận</Modal.Title>

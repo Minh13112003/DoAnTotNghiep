@@ -13,3 +13,6 @@ export const UpdateComment = (payload) => {
 export const DeleteComment = (Idcomment) => {
     return apiService.delete(`${urls.URL_DeleteComment}/${Idcomment}`)
 }
+export const GetAllComment = () => {
+    return apiService.get(urls.URL_GetAllComment);
+}

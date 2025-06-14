@@ -8,9 +8,11 @@ import Navbar from '../Dashboard/Navbar';
 import Footer from '../Dashboard/Footer';
 import './AdminStyles.css';
 import { toast } from 'react-toastify';
-import { AddMovie, UpdateMovie, DeleteMovie, GetAllMovie } from '../apis/movieAPI';
+import { AddMovie, UpdateMovie, DeleteMovie, GetAllMovie, GetMovieById } from '../apis/movieAPI';
 import CreatableSelect from 'react-select/creatable';
 import { slidebarMenus } from './slidebar';
+import "../App.css"; 
+import { UploadImage, UploadBackground } from '../apis/imageAPI.';
 
 const MovieManagement = () => {
     const navigate = useNavigate();
@@ -30,7 +32,11 @@ const MovieManagement = () => {
     const [selectedImage, setSelectedImage] = useState('');
     const [showBackgroundModal, setShowBackgroundModal] = useState(false);
     const [selectedBackground, setSelectedBackground] = useState('');
-
+    const [searchType, setSearchType] = useState("Tất cả");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filteredMovies, setFilteredMovies] = useState([]);
+    const [imageFile, setImageFile] = useState(null);
+    const [backgroundFile, setBackgroundFile] = useState(null);
     const statusOptions = [
         { value: "0", label: "Chưa có lịch" },
         { value: "1", label: "Sắp chiếu" },
@@ -57,16 +63,55 @@ const MovieManagement = () => {
         nameDirector: '',
         isVip: false,
         nameActors: [],
-        image: '',
-        backgroundImage: ''
     });
 
     // Thêm định nghĩa sidebarMenus vào đây
+    const handleImageChange = (event) => {
+        setImageFile(event.target.files[0]);
+      };
     
+      // Xử lý chọn file ảnh nền
+      const handleBackgroundChange = (event) => {
+        setBackgroundFile(event.target.files[0]);
+      };
 
     useEffect(() => {
         fetchMovies();
     }, []);
+    useEffect(() => {
+        const debounceSearch = setTimeout(() => {
+          if (searchTerm.trim() === "") {
+            setFilteredMovies(movies); // Reset to all movies if search term is empty
+            return;
+          }
+          const filtered = movies.filter((movie) => {
+            const searchValue = searchTerm.toLowerCase();
+            switch (searchType) {
+              case "Id":
+                return (movie.id).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(searchValue);
+              case "Title":
+                return (movie.title).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(searchValue);
+              case "Category":
+                return (movie.nameCategories).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(searchValue);
+              case "Type":
+                return (movie.typeMovie).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(searchValue);
+              case "Nation":
+                return (movie.nation).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(searchValue);
+              case "Tất cả":
+                return (movie.id).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(searchValue) || (movie.title).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(searchValue) 
+                || (movie.nameCategories).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(searchValue) || (movie.typeMovie).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(searchValue)
+                || (movie.nation).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(searchValue);
+              default:
+                return true;
+            }
+          });
+    
+          setFilteredMovies(filtered);
+          setCurrentPage(1); // Reset to first page on search
+        }, 1000); // 1-second delay
+        return () => clearTimeout(debounceSearch); // Cleanup timeout
+  }, [searchTerm, searchType, movies]); // Trigger on searchTerm or searchType change
+    
 
     const fetchMovies = async () => {
         try {
@@ -78,6 +123,7 @@ const MovieManagement = () => {
             // });
             const response = await GetAllMovie(1,10000000);
             setMovies(response.data.movies);
+            setFilteredMovies(response.data.movies);
         } catch (error) {
             console.error('Error fetching movies:', error);
         }
@@ -98,12 +144,12 @@ const MovieManagement = () => {
     const handleShowModal = async (movie = null) => {
         if (movie) {
             try {
-                const token = localStorage.getItem('userToken');
-                const response = await axios.get(`http://localhost:5285/api/movie/GetMovieById/${movie.id}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
+                // const response = await axios.get(`http://localhost:5285/api/movie/GetMovieById/${movie.id}`, {
+                //     headers: {
+                //         Authorization: `Bearer ${token}`
+                //     }
+                // });
+                const response = await GetMovieById(movie.id);
                 const movieData = response.data[0];
                 if (!movieData) {
                     console.error('Movie data is null or undefined');
@@ -127,8 +173,6 @@ const MovieManagement = () => {
                     nameDirector: movieData.nameDirector || '',
                     isVip: movieData.isVip || false,
                     nameActors: movieData.nameActors ? movieData.nameActors.split(', ') : [],
-                    image: movieData.image || '',
-                    backgroundImage: movieData.backgroundImage || ''
                 };
 
                 console.log('New Form Data:', newFormData);
@@ -138,6 +182,8 @@ const MovieManagement = () => {
                 setFormData(newFormData);
                 setCategoryCount(newFormData.nameCategories.length || 1);
                 setActorCount(newFormData.nameActors.length || 1);
+                setImageFile(null);
+                setBackgroundFile(null);
             } catch (error) {
                 console.error('Error fetching movie details:', error);
                 console.error('Error response:', error.response);
@@ -161,8 +207,6 @@ const MovieManagement = () => {
                 nameDirector: '',
                 isVip: false,
                 nameActors: [],
-                image: '',
-                backgroundImage: ''
             });
             setCategoryCount(1);
             setActorCount(1);
@@ -172,8 +216,15 @@ const MovieManagement = () => {
 
     const handleAddMovie = async (e) => {
         e.preventDefault();
+        if (!imageFile) {
+            setMessage('Vui lòng chọn một file ở hình ảnh!');
+            return;
+          }
+        if(!backgroundFile){
+            setMessage('Vui lòng chọn một file ở hình ảnh!');
+            return;
+        }
         try {
-            const token = localStorage.getItem('userToken');
             const submitData = {
                 ...formData,
                 nameCategories: formData.nameCategories.join(', '),
@@ -187,6 +238,25 @@ const MovieManagement = () => {
             // });
             const result = await AddMovie(submitData);
             if(result.status == 200){
+                if (imageFile) {
+                    const imageFormData = new FormData();
+                    imageFormData.append('file', imageFile);
+                    imageFormData.append('NameMovie', formData.title);
+                    const response = await UploadImage(imageFormData)
+                    if (response.status !== 200) {
+                        toast.error("Đã có lỗi khi Up ảnh");
+                        return;
+                    }
+                  }
+                if (backgroundFile) {
+                    const backgroundFormData = new FormData();
+                    backgroundFormData.append('file', backgroundFile);
+                    const response = UploadBackground(backgroundFormData);
+                    if (response.status !== 200) {
+                        toast.error("Đã có lỗi khi Up ảnh nền");
+                        return;
+                    }
+                }
                 fetchMovies();
                 setShowModal(false);
                 toast.success('Thêm phim mới thành công!');
@@ -210,6 +280,31 @@ const MovieManagement = () => {
             };
             
             await UpdateMovie(submitData);
+            if (imageFile) {
+                const imageFormData = new FormData();
+                imageFormData.append('File', imageFile);
+                imageFormData.append('NameMovie', formData.title);
+                // [...imageFormData.entries()].forEach(([key, value]) => {
+                //     console.log(`${key}:`, value);
+                // });
+                const response = await UploadImage(imageFormData)
+                
+                if (response.status !== 200) {
+                    toast.error("Đã có lỗi khi Up ảnh");
+                    return;
+                }
+              }
+            if (backgroundFile) {
+                const backgroundFormData = new FormData();
+                backgroundFormData.append('File', backgroundFile);
+                backgroundFormData.append('NameMovie', formData.title);
+                const response = await UploadBackground(backgroundFormData);
+                console.log(response.status);
+                if (response.status !== 200) {
+                    toast.error("Đã có lỗi khi Up ảnh nền");
+                    return;
+                }
+            }
             fetchMovies();
             setShowModal(false);
             toast.success('Cập nhật phim thành công!');
@@ -265,8 +360,8 @@ const MovieManagement = () => {
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = movies.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(movies.length / itemsPerPage);
+    const currentItems = filteredMovies.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredMovies.length / itemsPerPage);
 
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
@@ -368,6 +463,35 @@ const MovieManagement = () => {
                     <Container fluid>
                         <div className="content-header d-flex justify-content-between align-items-center mb-4">
                             <h2>Quản lý Phim</h2>
+                            <div className="search-bar d-flex align-items-center me-3">
+                                <Form.Select
+                                className="me-2"
+                                style={{ width: "200px" }}
+                                value={searchType}
+                                onChange={(e) => {
+                                    e.preventDefault();
+                                    setSearchType(e.target.value);
+                                }}
+                                >
+                                <option value="Tất cả">Tất cả</option>
+                                <option value="Id">ID</option>
+                                <option value="Title">Tên Phim</option>
+                                <option value="Category">Thể Loại</option>
+                                <option value="Type">Loại Phim</option>
+                                <option value="Nation">Quốc Gia</option>
+                                </Form.Select>
+                                <Form.Control
+                                type="text"
+                                placeholder="Nhập thông tin tìm kiếm..."
+                                className="me-4"
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    e.preventDefault();
+                                    setSearchTerm(e.target.value);
+                                }}
+                                />
+                           
+                            </div>
                             <Button variant="primary" onClick={() => handleShowModal()}>
                                 <FaPlus className="me-2" />
                                 Thêm Phim Mới
@@ -376,12 +500,17 @@ const MovieManagement = () => {
 
                         <div style={{ 
                             overflowX: 'auto', 
-                            width: '100%',
-                            maxWidth: '100%'
-                        }}>
+                            // width: '100%',
+                            maxWidth: '1450px',
+                            // width:'calc(2200px - 1000px)'
+                            
+                        }}
+                        className={isSidebarOpen ? 'change_size_table' : ''}
+                        >
                             <Table striped bordered hover responsive style={{ 
-                                width: 'max-content',
-                                minWidth: '100%'
+                                // width: 'max-content',
+                                width: '2200px',
+                                // minWidth: '2200px'
                             }}>
                                 <thead>
                                     <tr>
@@ -525,7 +654,7 @@ const MovieManagement = () => {
                                 </Pagination>
                             </div>
                         </div>
-
+                        <Footer/>
                         <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
                             <Modal.Header closeButton>
                                 <Modal.Title>
@@ -726,13 +855,66 @@ const MovieManagement = () => {
                                                 />
                                             </Form.Group>            
                                         </Col>
+                                        {selectedMovie && (
+                                                <>
+                                                    <Col md={6}>
+                                                        <Form.Group className="mb-3">
+                                                            <Form.Label>Đường dẫn ảnh hiện tại</Form.Label>
+                                                            <Form.Control
+                                                                type="text"
+                                                                value={selectedMovie.image || ''}
+                                                                readOnly
+                                                            />
+                                                            <a href={selectedMovie.image} target="_blank" rel="noopener noreferrer">
+                                                                Xem ảnh
+                                                            </a>
+                                                        </Form.Group>
+                                                    </Col>
+                                                    <Col md={6}>
+                                                        <Form.Group className="mb-3">
+                                                            <Form.Label>Đường dẫn ảnh nền hiện tại</Form.Label>
+                                                            <Form.Control
+                                                                type="text"
+                                                                value={selectedMovie.backgroundImage || ''}
+                                                                readOnly
+                                                            />
+                                                            <a href={selectedMovie.backgroundImage} target="_blank" rel="noopener noreferrer">
+                                                                Xem ảnh nền
+                                                            </a>
+                                                        </Form.Group>
+                                                    </Col>
+                                                    <Col md={6}>
+                                            <Form.Group className="mb-3">
+                                                <Form.Label>Chinh sửa hình ảnh</Form.Label>
+                                                <Form.Control
+                                                    type="file"
+                                                    accept="image/jpeg,image/png,image/gif"
+                                                    onChange={handleImageChange}
+                                                />
+                                            </Form.Group>
+                                        </Col>
+                                        
+                                        <Col md={6}>
+                                            <Form.Group className="mb-3">
+                                                <Form.Label>Chỉnh sửa hình nền</Form.Label>
+                                                <Form.Control
+                                                    type="file"
+                                                    accept="image/jpeg,image/png,image/gif"
+                                                    onChange={handleBackgroundChange}
+                                                />
+                                            </Form.Group>
+                                        </Col>
+                                                </>
+                                            )}
+                                    {!selectedMovie && (
+                                        <>
                                         <Col md={6}>
                                             <Form.Group className="mb-3">
                                                 <Form.Label>Hình ảnh</Form.Label>
                                                 <Form.Control
-                                                    type="text"
-                                                    value={formData.image}
-                                                    onChange={(e) => setFormData({...formData, image: e.target.value})}
+                                                    type="file"
+                                                    accept="image/jpeg,image/png,image/gif"
+                                                    onChange={handleImageChange}
                                                 />
                                             </Form.Group>
                                         </Col>
@@ -741,13 +923,14 @@ const MovieManagement = () => {
                                             <Form.Group className="mb-3">
                                                 <Form.Label>Hình nền</Form.Label>
                                                 <Form.Control
-                                                    type="text"
-                                                    value={formData.backgroundImage}
-                                                    onChange={(e) => setFormData({...formData, backgroundImage: e.target.value})}
+                                                    type="file"
+                                                    accept="image/jpeg,image/png,image/gif"
+                                                    onChange={handleBackgroundChange}
                                                 />
                                             </Form.Group>
                                         </Col>
-                                        
+                                        </>
+                                    )}
                                     </Row>
 
                                     <div className="text-end mt-3">
@@ -762,10 +945,8 @@ const MovieManagement = () => {
                             </Modal.Body>
                         </Modal>
                     </Container>
-                </div>
+                </div>     
             </div>
-
-            <Footer />
 
             {/* Modal hiển thị mô tả */}
             <Modal show={showDescriptionModal} onHide={() => setShowDescriptionModal(false)}>
@@ -833,8 +1014,11 @@ const MovieManagement = () => {
                         Đóng
                     </Button>
                 </Modal.Footer>
+                
             </Modal>
+           
         </div>
+        
     );
 };
 

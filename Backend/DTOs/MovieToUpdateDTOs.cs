@@ -16,7 +16,5 @@
         public string NameDirector { get; set; } = string.Empty;
         public bool IsVip { get; set; } = false;
         public string NameActors { get; set; } = string.Empty;
-        public string Image { get; set; } = string.Empty;
-        public string BackgroundImage { get; set; } = string.Empty;
     }
 }

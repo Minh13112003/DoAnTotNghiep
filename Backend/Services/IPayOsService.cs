@@ -9,5 +9,6 @@ namespace DoAnTotNghiep.Services
         Task<bool> HandleWebhook(string requestBody, string receivedSignature);
         Task<List<PaymentOrder>> GetPaymentOrders(string UserName);
         Task<PaymentLinkInformation> GetDetailPaymentOrders(string UserName, long? OrderCode);
+        Task<bool> CancelPaymentOrder(long Ordercode);
     }
 }

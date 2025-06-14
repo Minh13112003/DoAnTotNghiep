@@ -1,4 +1,4 @@
-import { FaFilm, FaList, FaUsers } from 'react-icons/fa';
+import { FaFilm, FaList, FaUsers, FaComments, FaEnvelope } from 'react-icons/fa';
 
 export const slidebarMenus = [
     {
@@ -27,7 +27,7 @@ export const slidebarMenus = [
     },
     {
         title: 'Quản lý Bình luận',
-        icon: <FaList />,
+        icon: <FaComments />,
         items: [
             { title: 'Danh sách bình luận', link: '/quan-ly/binh-luan' },
             { title: 'Bình luận bị báo cáo', link: '/quan-ly/binh-luan/bao-cao' },
@@ -35,7 +35,7 @@ export const slidebarMenus = [
     },
     {
         title: 'Quản lý Góp ý',
-        icon: <FaList />,
+        icon: <FaEnvelope />,
         items: [
             { title: 'Danh sách góp ý', link: '/quan-ly/gop-y' },
         ]

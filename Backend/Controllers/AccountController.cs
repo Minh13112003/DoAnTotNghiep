@@ -1,5 +1,7 @@
-﻿using DoAnTotNghiep.DTOs;
+﻿using DoAnTotNghiep.Data;
+using DoAnTotNghiep.DTOs;
 using DoAnTotNghiep.Helper.DateTimeVietNam;
+using DoAnTotNghiep.Helper.StringHelper;
 using DoAnTotNghiep.Model;
 using DoAnTotNghiep.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -7,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace DoAnTotNghiep.Controllers
 {
@@ -19,13 +22,16 @@ namespace DoAnTotNghiep.Controllers
         private readonly ITokenServices _tokenServices;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly IEmailAuthenticationServices _emailService;
+        private readonly DatabaseContext _database;
+        
 
-        public AccountController(UserManager<AppUser> userManager, ITokenServices tokenServices, SignInManager<AppUser> signInManager, IEmailAuthenticationServices emailService)
+        public AccountController(UserManager<AppUser> userManager, ITokenServices tokenServices, SignInManager<AppUser> signInManager, IEmailAuthenticationServices emailService, DatabaseContext database)
         {
             _userManager = userManager;
             _tokenServices = tokenServices;
             _signInManager = signInManager;
             _emailService = emailService;
+            _database = database;
             
         }
 
@@ -63,7 +69,9 @@ namespace DoAnTotNghiep.Controllers
                     Token = _tokenServices.CreateToken(user, Role.ToList()),
                     Roles = roleString,
                     RefreshToken = refreshToken,
-                    RefreshTokenExpiryTime = user.RefreshTokenExpiryTime
+                    RefreshTokenExpiryTime = user.RefreshTokenExpiryTime,
+                    Image = user.Image,
+                    NickName = user.Nickname
                 });
             }
             catch (Exception ex)
@@ -71,6 +79,7 @@ namespace DoAnTotNghiep.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+        
 
 
         [HttpPost("register")]
@@ -80,12 +89,14 @@ namespace DoAnTotNghiep.Controllers
             {
                 if (!ModelState.IsValid) return BadRequest(ModelState);
                 var age = DateTimeHelper.CalculateAge(accountLoginDTO.Birthday);
+                var verify = StringHelper.GenerateRandomUppercaseString();
                 var appUser = new AppUser
                 {
                     UserName = accountLoginDTO.UserName,
                     Email = accountLoginDTO.EmailAddress,
                     Age = age,
                     PhoneNumber = accountLoginDTO.PhoneNumber,
+                    VerificationCode = verify
                 };
                 var createUser = await _userManager.CreateAsync(appUser, accountLoginDTO.Password!);
                 if (createUser.Succeeded)
@@ -94,11 +105,13 @@ namespace DoAnTotNghiep.Controllers
                     var roleResult = await _userManager.AddToRoleAsync(appUser, "User");
                     if (roleResult.Succeeded)
                     {
+                        
 
                         return Ok(new UserToken
                         {
                             Email = appUser.Email,
-                            UserName = appUser.UserName
+                            UserName = appUser.UserName,
+                            VerfiCode = appUser.VerificationCode
                         });
                     }
                     else
@@ -242,7 +255,9 @@ namespace DoAnTotNghiep.Controllers
                 user.Email,
                 user.PhoneNumber,
                 user.Age,
-                Roles = roleString
+                Roles = roleString,
+                Nickname = user.Nickname ?? null,
+                Image = user.Image ?? null
             });
         }
 
@@ -368,6 +383,95 @@ namespace DoAnTotNghiep.Controllers
                 return Ok(user.IsVip);
             }
             return BadRequest(new { message = "Không tìm thấy người dùng" });
+        }
+        [Authorize]
+        [HttpPut("ChangeAccountInfor")]
+        public async Task<IActionResult> ChangeAccountInfor(UserToken userDTO)
+        {
+            var UserName = User.Identity?.Name;
+            var user = await _userManager.FindByNameAsync(UserName!);
+
+            if (user != null)
+            {
+                bool isUpdated = false;
+
+                if (!string.IsNullOrEmpty(userDTO.NickName))
+                {
+                    user.Nickname = userDTO.NickName;
+                    isUpdated = true;
+                }
+                if (!string.IsNullOrEmpty(userDTO.Phonenumber))
+                {
+                    user.PhoneNumber = userDTO.Phonenumber;
+                    isUpdated = true;
+                }
+                if (userDTO.isVip == true)
+                {
+                    var now = DateTimeHelper.GetDateTimeVnNowWithDateTime();
+                    //Nạp lần đầu hoặc lâu mới nạp
+                    if (user.TimeTopUp == null || user.ExpirationTime < now)
+                    {
+                        user.TimeTopUp = DateTimeHelper.GetDateTimeVnNowWithDateTime();
+                        user.ExpirationTime = user.TimeTopUp.Value.AddDays(3);
+                    }
+                    else //Nạp duy trì
+                    {
+                        user.TimeTopUp = DateTimeHelper.GetDateTimeVnNowWithDateTime();
+                        user.ExpirationTime = user.ExpirationTime.Value.AddDays(3);
+                    }
+                    user.IsVip = true;
+                    isUpdated = true;
+                }
+
+                if (isUpdated)
+                {
+                    var updateResult = await _userManager.UpdateAsync(user);
+                    if (!updateResult.Succeeded)
+                    {
+                        return BadRequest(new { message = "Cập nhật thông tin thất bại." });
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(userDTO.Password))
+                {
+                    var removeresult = await _userManager.RemovePasswordAsync(user);
+                    if (removeresult.Succeeded)
+                    {
+                        var addresult = await _userManager.AddPasswordAsync(user, userDTO.Password);
+                        if (!addresult.Succeeded)
+                        {
+                            return BadRequest(new { message = "Đổi mật khẩu thất bại." });
+                        }
+                    }
+                }
+                
+
+                return Ok(new { message = "Cập nhật thông tin thành công." });
+            }
+
+            return NotFound(new { message = "Không tìm thấy người dùng." });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("GetAllUser")]
+        public async Task<IActionResult> GetAllUser()
+        {
+            var usersInRoleUser = from user in _database.Users
+                                  join userRole in _database.UserRoles on user.Id equals userRole.UserId
+                                  join role in _database.Roles on userRole.RoleId equals role.Id
+                                  where role.Name == "User"
+                                  select new
+                                  {
+                                      user.UserName,
+                                      user.Email,
+                                      user.PhoneNumber,
+                                      user.IsVip,
+                                      user.Image,
+                                      user.Nickname
+                                  };
+
+            var result = await usersInRoleUser.ToListAsync();
+            return Ok(result);
         }
     }
 }

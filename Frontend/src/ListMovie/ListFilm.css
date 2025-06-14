@@ -38,6 +38,11 @@
     display: block;
     transition: transform 0.3s ease-in-out;
     height: 300px;
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
 }
 
 .image-container:hover .card-img-top {

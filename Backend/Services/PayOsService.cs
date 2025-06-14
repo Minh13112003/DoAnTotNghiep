@@ -47,6 +47,18 @@ namespace DoAnTotNghiep.Services
             return BitConverter.ToString(hash).Replace("-", "").ToLower(); // giống hmacHex bên Java
         }
 
+        public async Task<bool> CancelPaymentOrder(long Ordercode)
+        {
+            var cancelpayment = await _databaseContext.PaymentOrder.FirstOrDefaultAsync(p => p.OrderCode == Ordercode);
+            if(cancelpayment != null)
+            {
+                cancelpayment.Status = "Đã Hủy";
+                await _databaseContext.SaveChangesAsync();
+                return true;
+            }
+            return false;
+        }
+
         public async Task<CreatePaymentResult> CreatePaymentLink(int type, string UserName)
         {
             long orderCode = GenerateOrderCode();

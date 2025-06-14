@@ -29,7 +29,10 @@ const EpisodeManagement = () => {
     const [showBackgroundModal, setShowBackgroundModal] = useState(false);
     const [selectedImage, setSelectedImage] = useState('');
     const [selectedBackground, setSelectedBackground] = useState('');
-
+    const [searchType, setSearchType] = useState("Tên Phim");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filteredMovies, setFilteredMovies] = useState([]);
+    const [filteredEpisodes, setFilteredEpisodes] = useState([])
     const [formData, setFormData] = useState({
         idLinkMovie: '',
         idMovie: '',
@@ -43,6 +46,30 @@ const EpisodeManagement = () => {
         fetchEpisodes();
         fetchMovies();
     }, []);
+    useEffect(() => {
+        const debounceSearch = setTimeout(() => {
+            if (searchTerm.trim() === "" ) {
+                setFilteredEpisodes(episodeList); // Hiển thị tất cả nếu không có từ khóa
+                console.log(episodeList);
+                setCurrentPage(1); // Reset về trang đầu
+                return;
+            }
+
+            const filtered = episodeList.filter((episode) => {
+                const searchValue = searchTerm.toLowerCase();
+                if (searchType === "Tên Phim") {
+                    // return episode.title.toLowerCase().includes(searchValue);
+                    return (episode.title).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(searchValue);
+                }
+                return true; // Trường hợp mặc định (không lọc)
+            });
+
+            setFilteredEpisodes(filtered);
+            setCurrentPage(1); // Reset về trang đầu khi lọc
+        }, 1000); // Trì hoãn 1 giây
+
+        return () => clearTimeout(debounceSearch); // Dọn dẹp timeout
+    }, [searchTerm, searchType, episodeList]);
 
     const fetchEpisodes = async () => {
         try {
@@ -57,6 +84,7 @@ const EpisodeManagement = () => {
                 // Nếu cùng phim thì sắp xếp theo số tập
                 return a.episode - b.episode;
             });
+            setFilteredEpisodes(response.data);
             setEpisodeList(sortedData);
         } catch (error) {
             console.error('Error fetching episodes:', error);
@@ -158,8 +186,8 @@ const EpisodeManagement = () => {
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = episodeList.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(episodeList.length / itemsPerPage);
+    const currentItems = filteredEpisodes.slice(indexOfFirstItem, indexOfLastItem); // Sử dụng filteredEpisodes
+    const totalPages = Math.ceil(filteredEpisodes.length / itemsPerPage);
 
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
@@ -252,6 +280,32 @@ const EpisodeManagement = () => {
                     <Container fluid>
                         <div className="content-header d-flex justify-content-between align-items-center mb-4">
                             <h2>Quản lý Tập phim</h2>
+                            <div className="search-bar d-flex align-items-center me-3">
+                            {/*
+                                <Form.Select
+                                className="me-2"
+                                style={{ width: "200px" }}
+                                value={searchType}
+                                onChange={(e) => {
+                                    e.preventDefault();
+                                    setSearchType(e.target.value);
+                                }}
+                                >
+                                <option value="Tên Phim">Tên Phim</option>
+                                </Form.Select>
+                                */}
+                                <Form.Control
+                                type="text"
+                                placeholder="Nhập tên phim cần tìm kiếm..."
+                                style={{width : '500px'}}
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    e.preventDefault();
+                                    setSearchTerm(e.target.value);
+                                }}
+                                />
+                           
+                            </div>
                             <Button variant="primary" onClick={() => handleShowModal()}>
                                 <FaPlus className="me-2" />
                                 Thêm Tập phim Mới

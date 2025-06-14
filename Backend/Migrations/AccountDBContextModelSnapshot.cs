@@ -118,6 +118,9 @@ namespace DoAnTotNghiep.Migrations
                     b.Property<string>("FavoriteSlugTitle")
                         .HasColumnType("text");
 
+                    b.Property<string>("Image")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsVip")
                         .HasColumnType("boolean");
 
@@ -126,6 +129,9 @@ namespace DoAnTotNghiep.Migrations
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Nickname")
+                        .HasColumnType("text");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -168,6 +174,9 @@ namespace DoAnTotNghiep.Migrations
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
+
+                    b.Property<string>("VerificationCode")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -293,7 +302,6 @@ namespace DoAnTotNghiep.Migrations
                         .HasColumnName("Id");
 
                     b.Property<string>("BackgroundImage")
-                        .IsRequired()
                         .HasColumnType("VARCHAR(500)")
                         .HasColumnName("BackgroundImage");
 
@@ -311,7 +319,6 @@ namespace DoAnTotNghiep.Migrations
                         .HasColumnName("Duration");
 
                     b.Property<string>("Image")
-                        .IsRequired()
                         .HasColumnType("VARCHAR(500)")
                         .HasColumnName("Image");
 
@@ -406,6 +413,39 @@ namespace DoAnTotNghiep.Migrations
                     b.HasKey("IdMovie", "UserName");
 
                     b.ToTable("MovieRating", (string)null);
+                });
+
+            modelBuilder.Entity("DoAnTotNghiep.Model.Notification", b =>
+                {
+                    b.Property<string>("IdNotice")
+                        .HasColumnType("VARCHAR(50)")
+                        .HasColumnName("IdNotice");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("VARCHAR(200)")
+                        .HasColumnName("Content");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("Idcomment")
+                        .HasColumnType("VARCHAR(50)")
+                        .HasColumnName("IdComment");
+
+                    b.Property<string>("TitleMovie")
+                        .HasColumnType("VARCHAR(255)")
+                        .HasColumnName("TitleMovie");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("VARCHAR(150)")
+                        .HasColumnName("UserName");
+
+                    b.HasKey("IdNotice");
+
+                    b.ToTable("Notification", (string)null);
                 });
 
             modelBuilder.Entity("DoAnTotNghiep.Model.PaymentOrder", b =>

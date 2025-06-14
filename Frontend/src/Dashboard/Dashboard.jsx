@@ -8,7 +8,8 @@ import MoiCapNhat from './Moicapnhat';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import { DataContext, useData } from '../ContextAPI/ContextNavbar';
-
+import './Dashboard.css'; 
+import "../App.css"; 
 
 const Dashboard = () => {
     const { categories = [], movieTypes = [], nations = [], statuses = [], statusMap = {} } = useContext(DataContext);

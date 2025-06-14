@@ -15,8 +15,8 @@
         public string Quality { get; set; } = string.Empty;
         public string Language { get; set; } = string.Empty;
         public int View { get; set; }
-        public string Image {  get; set; } = string.Empty;
-        public string BackgroundImage {  get; set; } = string.Empty;
+        public string? Image {  get; set; }
+        public string? BackgroundImage {  get; set; }
         public string SlugNation { get; set; } = string.Empty;
         public bool Block {  get; set; } = false;
         public string NameDirector {  get; set; } = string.Empty;

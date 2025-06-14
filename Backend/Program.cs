@@ -102,7 +102,8 @@ builder.Services.AddScoped<IVnPayService, VnPayService>();
 builder.Services.AddScoped<IMovieRatingRepository, MovieRatingRepository>();
 builder.Services.AddScoped<IMovieRatingService, MovieRatingService>();
 builder.Services.AddScoped<IPayOsService, PayOsService>();
-
+builder.Services.AddScoped<INotificationServices, NotificationService>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -137,6 +138,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 

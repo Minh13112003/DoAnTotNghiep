@@ -66,14 +66,10 @@ const ListFavoriteFilm = () => {
             //     }
             // });
             const response = await FavoriteMovies(page, itemsPerPage);
-            console.log(response.data);
-            setMovies(response.data);
+            setMovies(response.data.movies);
             // setCurrentMovies(response.data.movies?.slice(indexOfFirstItem, indexOfLastItem));
             setCurrentMovies(response.data.movies);
             setTotalPages(Math.ceil(response.data.totalRecords / itemsPerPage));
-            if (response.data.movies?.length === 0) {
-                navigate("/*");
-            }
         } catch (error) {
             console.error('Error fetching favorite movies:', error);
             if (error.response?.status === 401) {
@@ -94,9 +90,7 @@ const ListFavoriteFilm = () => {
         const params = new URLSearchParams(location.search);
         let page = params.get("page");
         setCurrentPage(parseInt(page));
-        console.log(">>>", page);
         let test = page ? page : 1;
-        console.log("test:",test);
         window.scrollTo({ top: 0, behavior: 'smooth' });
         fetchMovies(test);
     }, [navigate]);
@@ -111,7 +105,7 @@ const ListFavoriteFilm = () => {
                     </div>
                 </div>
                 <div className='row mt-5'>
-                    {movies.movies?.length === 0 ? (
+                    {movies?.length === 0 ? (
                         <div className="text-center text-white py-5">
                             <h4>Bạn chưa có phim yêu thích nào</h4>
                             <Link to="/" className="btn btn-primary mt-3">

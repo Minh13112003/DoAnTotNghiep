@@ -143,5 +143,37 @@ namespace DoAnTotNghiep.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("GetCommentReport/{IdComment}")]
+        public async Task<IActionResult> GetCommentReport([FromRoute] string IdComment)
+        {
+            if (string.IsNullOrEmpty(IdComment)) return BadRequest(new { message = "Thiếu Id bình luận" });
+            var username = User.Identity?.Name;
+            var comment = await _reportServices.GetCommentReport(IdComment, username!);
+            if (comment == null) return BadRequest(new { message = "Không tìm thấy báo cáo của bình luận" });
+            return Ok(comment);
+        }
+        [Authorize(Roles = "Admin")]
+        [HttpPost("ExecuteReport/{IdComment}")]
+        public async Task<IActionResult> ExecuteReport([FromRoute] string IdComment)
+        {
+            if (string.IsNullOrEmpty(IdComment)) return BadRequest(new { message = "Thiếu Id bình luận" });
+            var username = User.Identity?.Name;
+            var result = await _reportServices.ExecuteCommentReport(IdComment, username!);
+            if (result == true) return Ok();
+            return BadRequest(new {message = "Đã có lỗi xảy ra"});
+        }
+        [Authorize(Roles = "Admin")]
+        [HttpPost("ResponseCommentReport")]
+        public async Task<IActionResult> ResponseCommentReport([FromBody] List<ResponseReport> responseReports)
+        {
+            var username = User.Identity?.Name;
+            var result =await _reportServices.ResponseCommentReports(responseReports, username!);
+            if (!result)
+                return BadRequest("Xử lý báo cáo thất bại.");
+
+            return Ok("Phản hồi báo cáo thành công.");
+        }
     }
 }

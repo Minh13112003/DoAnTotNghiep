@@ -13,11 +13,13 @@ import { toast } from 'react-toastify';
 const Payment = () => {
     const [selectedPlan, setSelectedPlan] = useState(null);
     const { categories, movieTypes, nations, statuses, statusMap } = useContext(DataContext);
+    
     const navigate = useNavigate();
 
     const handleGoBack = () => {
         navigate(-1);
     };
+    
 
     const plans = [
         {
@@ -43,7 +45,7 @@ const Payment = () => {
                 'Không quảng cáo',
                 'Chất lượng Full HD',
                 'Hỗ trợ 24/7',
-                'Ưu tiên tải phim mới'
+                'Tiết kiệm 10% chi phí '
             ],
             description: 'Gói phổ biến nhất, phù hợp cho người dùng muốn thưởng thức phim trong tuần nghỉ dưỡng.'
         },
@@ -57,9 +59,7 @@ const Payment = () => {
                 'Không quảng cáo',
                 'Chất lượng 4K',
                 'Hỗ trợ 24/7',
-                'Ưu tiên tải phim mới',
-                'Xem trước phim mới',
-                'Tải phim về xem offline'
+                'Tiết kiệm 20% chi phí'
             ],
             description: 'Gói tiết kiệm nhất, phù hợp cho người dùng thường xuyên xem phim và muốn trải nghiệm đầy đủ tính năng cao cấp.'
         }
@@ -131,8 +131,9 @@ const Payment = () => {
 
                                 <Button
                                     variant={selectedPlan === plan.id ? "primary" : "outline-primary"}
-                                    className="mt-auto"
-                                    onClick={() => handleSelectPlan(plan.id)}
+                                    className="mt-auto d-flex justify-content-center align-items-center"
+                                    onClick={() => handleSelectPlan(plan.id)
+                                    }
                                 >
                                     {selectedPlan === plan.id ? 'Đã chọn' : 'Chọn gói'}
                                 </Button>

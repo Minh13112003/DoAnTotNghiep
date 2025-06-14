@@ -1,7 +1,7 @@
 /* Dashboard Container */
 .dashboard-container {
     min-height: 100vh;
-    background-color: #f8f9fa;
+    background-color: #000000;
 }
 
 /* Hero Section */
@@ -12,14 +12,14 @@
 
 /* Main Content Section */
 .main-content {
-    background-color: #fff;
+    background-color: #000;
     box-shadow: 0 0 15px rgba(0,0,0,0.1);
 }
 
 .section-title {
     font-size: 2rem;
     font-weight: 600;
-    color: #333;
+    color: whitesmoke;
     margin-bottom: 2rem;
     position: relative;
     padding-bottom: 0.5rem;
@@ -28,6 +28,13 @@
 .section-title span {
     position: relative;
     padding-bottom: 0.5rem;
+}
+html, body {
+    background-color: #000000 !important;
+    color: #ffffff;
+    margin: 0;
+    padding: 0;
+    height: 100%;
 }
 
 .section-title span::after {
@@ -61,17 +68,18 @@
 
 .movie-card .card-body {
     padding: 1.25rem;
+    background-color: #000;
 }
 
 .movie-card .card-title {
     font-size: 1.1rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
-    color: #333;
+    color: white;
 }
 
 .movie-card .card-text {
-    color: #6c757d;
+    color: white;
     font-size: 0.9rem;
 }
 

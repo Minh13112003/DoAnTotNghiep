@@ -5,12 +5,13 @@ import Navbar from '../Dashboard/Navbar';
 import { DataContext } from "../ContextAPI/ContextNavbar";
 import Footer from "../Dashboard/Footer";
 import { useNavigate } from 'react-router-dom';
-import { Login, Register } from "../apis/authAPI";
+import { Login, Register, SendOTP } from "../apis/authAPI";
 import Cookies from 'js-cookie';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './AuthForm.css';
-import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Thêm icon từ react-icons
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { jwtDecode } from 'jwt-decode';
 
 const AuthForm = () => {
   const navigate = useNavigate();
@@ -29,13 +30,15 @@ const AuthForm = () => {
   const [otp, setOtp] = useState("");
   const [countdown, setCountdown] = useState(0);
   const [canResendOTP, setCanResendOTP] = useState(true);
-  const [showPassword, setShowPassword] = useState(false); // State để toggle hiển thị mật khẩu
+  const [showPassword, setShowPassword] = useState(false);
+  const [verfiCode, setVerfiCode] = useState("");
+
   useEffect(() => {
     Cookies.remove('accessToken');
     Cookies.remove('refreshToken');
     Cookies.remove('username');
     localStorage.removeItem('userData');
-}, []);
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
@@ -95,9 +98,7 @@ const AuthForm = () => {
       return;
     }
     try {
-      await axios.post(
-        `http://localhost:5285/api/account/SendOTP/${formData.username}`
-      );
+      await SendOTP(formData.username);
       setMessage({
         type: "success",
         content: "Mã OTP đã được gửi thành công!"
@@ -135,14 +136,15 @@ const AuthForm = () => {
       const response = isLogin ? await Login(payload) : await Register(payload);
       
       if (isLogin) {
-        const { token, refreshToken, userName, ...userData } = response.data;
+        const { token, refreshToken, userName, image, ...userData } = response.data;
         if (token) {
+          const decode = jwtDecode(token);
           Cookies.set('accessToken', token, { expires: 30 });
           Cookies.set('refreshToken', refreshToken, { expires: 7 });
-          Cookies.set('username', userName, { expires: 7 });
+          Cookies.set('username', decode.given_name, { expires: 7 });
+          Cookies.set('avatar', image, { expires: 7 });
           localStorage.setItem('userData', JSON.stringify({
-            email: userData.email,
-            roles: userData.roles
+            roles: decode.role
           }));
           
           setMessage({
@@ -152,21 +154,21 @@ const AuthForm = () => {
           navigate('/');
         }
       } else {
+        const VerfiCode  = response.data.verfiCode;
+        const username = response.data.userName;
+        setVerfiCode(VerfiCode);
         setMessage({
           type: "success",
-          content: "Đăng ký thành công! Vui lòng đăng nhập."
+          content: `Đăng ký thành công cho tài khoản : ${username}! Đây là mã xác thực của bạn khi bạn muốn đổi Email, vui lòng không chia sẻ mã này đến người khác: ${VerfiCode}`
         });
-        setTimeout(() => {
-          setIsLogin(true);
-          setFormData({
-            username: "",
-            password: "",
-            email: "",
-            birthday: "",
-            phonenumber: "0",
-            otp: ""
-          });
-        }, 1000);
+        setFormData({
+          username: "",
+          password: "",
+          email: "",
+          birthday: "",
+          phonenumber: "",
+          otp: ""
+        });
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message || 
@@ -189,16 +191,29 @@ const AuthForm = () => {
     navigate('/tai-khoan/auth');
   };
 
-  // Xử lý sự kiện nhấn Enter
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleSubmit(e);
     }
   };
 
-  // Toggle hiển thị mật khẩu
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const handleBackToLogin = () => {
+    setIsLogin(true);
+    setVerfiCode("");
+    setMessage({ type: "", content: "" });
+    setFormData({
+      username: "",
+      password: "",
+      email: "",
+      birthday: "",
+      phonenumber: "",
+      otp: ""
+    });
+    setErrors({});
   };
 
   return (
@@ -209,7 +224,7 @@ const AuthForm = () => {
     }}>
       <Navbar categories={categories} movieTypes={movieTypes} nations={nations} statuses={statuses} statusMap={statusMap} />
       
-      <div className="container flex-grow-1" style={{marginTop:'100px', marginBottom: '50px'}}>
+      <div className="container flex-grow-1" style={{ marginTop: '100px', marginBottom: '50px' }}>
         <div className="row justify-content-center">
           <div className="col-md-6">
             <div className="card">
@@ -217,140 +232,151 @@ const AuthForm = () => {
                 <h3>{isLogin ? "Đăng nhập" : "Đăng ký"}</h3>
               </div>
               <div className="card-body">
-                <form onSubmit={handleSubmit} onKeyPress={handleKeyPress}>
-                  <div className="mb-3 row align-items-center">
-                    <label className="col-sm-3 col-form-label">Username:</label>
-                    <div className="col-sm-9">
-                      <input
-                        type="text"
-                        className={`form-control ${errors.username ? 'is-invalid' : ''}`}
-                        name="username"
-                        value={formData.username}
-                        onChange={handleChange}
-                      />
-                      {errors.username && (
-                        <div className="invalid-feedback">{errors.username}</div>
-                      )}
+                {!isLogin && verfiCode ? (
+                  <div className="text-center">
+                    <div className="alert alert-success">
+                      {message.content}
                     </div>
-                  </div>
-
-                  {!isLogin && (
-                    <>
-                      <div className="mb-3 row align-items-center">
-                        <label className="col-sm-3 col-form-label">Email:</label>
-                        <div className="col-sm-9">
-                          <input
-                            type="email"
-                            className={`form-control ${errors.email ? 'is-invalid' : ''}`}
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                          />
-                          {errors.email && (
-                            <div className="invalid-feedback">{errors.email}</div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="mb-3 row align-items-center">
-                        <label className="col-sm-3 col-form-label">Ngày sinh:</label>
-                        <div className="col-sm-9">
-                          <DatePicker
-                            selected={formData.birthday}
-                            onChange={(date) => handleDateChange(date)}
-                            dateFormat="yyyy-MM-dd"
-                            className={`form-control ${errors.birthday ? 'is-invalid' : ''}`}
-                            showYearDropdown
-                            scrollableYearDropdown
-                            yearDropdownItemNumber={100}
-                            maxDate={new Date()}
-                            placeholderText="Chọn ngày sinh"
-                          />
-                          {errors.birthday && (
-                            <div className="invalid-feedback">{errors.birthday}</div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="mb-3 row align-items-center">
-                        <label className="col-sm-3 col-form-label">Phone:</label>
-                        <div className="col-sm-9">
-                          <input
-                            type="text"
-                            className={`form-control ${errors.phonenumber ? 'is-invalid' : ''}`}
-                            name="phonenumber"
-                            value={formData.phonenumber}
-                            onChange={handleChange}
-                          />
-                          {errors.phoneNumber && (
-                            <div className="invalid-feedback">{errors.phonenumber}</div>
-                          )}
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  <div className="mb-4 row align-items-center">
-                    <label className="col-sm-3 col-form-label">Password:</label>
-                    <div className="col-sm-9 position-relative">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        className={`form-control ${errors.password ? 'is-invalid' : ''}`}
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                      />
-                      <span 
-                        className="position-absolute end-0 top-50 translate-middle-y pe-3"
-                        style={{ cursor: 'pointer' }}
-                        onClick={togglePasswordVisibility}
-                      >
-                        {showPassword ? <FaEyeSlash /> : <FaEye />}
-                      </span>
-                      {errors.password && (
-                        <div className="invalid-feedback">{errors.password}</div>
-                      )}
-                    </div>
-                  </div>
-
-                  {isLogin && (
-                    <div className="mb-3 row align-items-center">
-                      <label className="col-sm-3 col-form-label">OTP:</label>
-                      <div className="col-sm-6">
-                        <input
-                          type="text"
-                          className={`form-control ${errors.otp ? 'is-invalid' : ''}`}
-                          name="otp"
-                          value={formData.otp}
-                          onChange={handleChange}
-                          placeholder="Nhập mã OTP"
-                        />
-                        {errors.otp && (
-                          <div className="invalid-feedback">{errors.otp}</div>
-                        )}
-                      </div>
-                      <div className="col-sm-3">
-                        <button
-                          type="button"
-                          className="btn btn-secondary"
-                          onClick={handleSendOTP}
-                          disabled={!canResendOTP}
-                        >
-                          {countdown > 0 
-                            ? `Gửi lại (${Math.floor(countdown / 60)}:${(countdown % 60).toString().padStart(2, '0')})` 
-                            : "Gửi OTP"}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="d-grid gap-2">
-                    <button type="submit" className="btn btn-primary">
-                      {isLogin ? "Đăng nhập" : "Đăng ký"}
+                    <button className="btn btn-primary mt-3" onClick={handleBackToLogin}>
+                      Quay về trang đăng nhập
                     </button>
                   </div>
-                </form>
+                ) : (
+                  <form onSubmit={handleSubmit} onKeyPress={handleKeyPress}>
+                    <div className="mb-3 row align-items-center">
+                      <label className="col-sm-3 col-form-label">Username:</label>
+                      <div className="col-sm-9">
+                        <input
+                          type="text"
+                          className={`form-control ${errors.username ? 'is-invalid' : ''}`}
+                          name="username"
+                          value={formData.username}
+                          onChange={handleChange}
+                        />
+                        {errors.username && (
+                          <div className="invalid-feedback">{errors.username}</div>
+                        )}
+                      </div>
+                    </div>
 
-                {message.content && (
-                  <div className={`alert ${message.type === "success" ? "alert-success" : "alert-danger"} mt-3 text-center`}>
+                    {!isLogin && (
+                      <>
+                        <div className="mb-3 row align-items-center">
+                          <label className="col-sm-3 col-form-label">Email:</label>
+                          <div className="col-sm-9">
+                            <input
+                              type="email"
+                              className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                              name="email"
+                              value={formData.email}
+                              onChange={handleChange}
+                            />
+                            {errors.email && (
+                              <div className="invalid-feedback">{errors.email}</div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="mb-3 row align-items-center">
+                          <label className="col-sm-3 col-form-label">Ngày sinh:</label>
+                          <div className="col-sm-9">
+                            <DatePicker
+                              selected={formData.birthday}
+                              onChange={handleDateChange}
+                              dateFormat="yyyy-MM-dd"
+                              className={`form-control ${errors.birthday ? 'is-invalid' : ''}`}
+                              showYearDropdown
+                              scrollableYearDropdown
+                              yearDropdownItemNumber={100}
+                              maxDate={new Date()}
+                              placeholderText="Chọn ngày sinh"
+                            />
+                            {errors.birthday && (
+                              <div className="invalid-feedback">{errors.birthday}</div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="mb-3 row align-items-center">
+                          <label className="col-sm-3 col-form-label">Phone:</label>
+                          <div className="col-sm-9">
+                            <input
+                              type="text"
+                              className={`form-control ${errors.phonenumber ? 'is-invalid' : ''}`}
+                              name="phonenumber"
+                              value={formData.phonenumber}
+                              onChange={handleChange}
+                            />
+                            {errors.phoneNumber && (
+                              <div className="invalid-feedback">{errors.phonenumber}</div>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    <div className="mb-4 row align-items-center">
+                      <label className="col-sm-3 col-form-label">Password:</label>
+                      <div className="col-sm-9 position-relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                          name="password"
+                          value={formData.password}
+                          onChange={handleChange}
+                        />
+                        <span 
+                          className="position-absolute end-0 top-50 translate-middle-y pe-3"
+                          style={{ cursor: 'pointer' }}
+                          onClick={togglePasswordVisibility}
+                        >
+                          {showPassword ? <FaEyeSlash /> : <FaEye />}
+                        </span>
+                        {errors.password && (
+                          <div className="invalid-feedback">{errors.password}</div>
+                        )}
+                      </div>
+                    </div>
+
+                    {isLogin && (
+                      <div className="mb-3 row align-items-center">
+                        <label className="col-sm-3 col-form-label">OTP:</label>
+                        <div className="col-sm-6">
+                          <input
+                            type="text"
+                            className={`form-control ${errors.otp ? 'is-invalid' : ''}`}
+                            name="otp"
+                            value={formData.otp}
+                            onChange={handleChange}
+                            placeholder="Nhập mã OTP"
+                          />
+                          {errors.otp && (
+                            <div className="invalid-feedback">{errors.otp}</div>
+                          )}
+                        </div>
+                        <div className="col-sm-3">
+                          <button
+                            type="button"
+                            className="btn btn-secondary"
+                            onClick={handleSendOTP}
+                            disabled={!canResendOTP}
+                          >
+                           {countdown > 0 
+                          ? `Gửi lại (${Math.floor(countdown / 60)}:${(countdown % 60).toString().padStart(2, '0')})` 
+                          : "Gửi OTP"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="d-grid gap-2">
+                      <button type="submit" className="btn btn-primary">
+                        {isLogin ? "Đăng nhập" : "Đăng ký"}
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {message.content && !verfiCode && (
+                  <div className={`alert ${message.type === 'success' ? 'alert-success' : 'alert-danger'} mt-3 text-center`}>
                     {message.content}
                   </div>
                 )}
@@ -365,12 +391,13 @@ const AuthForm = () => {
                         username: "",
                         password: "",
                         email: "",
-                        age: "",
+                        birthday: "",
                         phonenumber: "",
                         otp: ""
                       });
                       setErrors({});
                       setMessage({ type: "", content: "" });
+                      setVerfiCode('');
                     }}
                   >
                     {isLogin ? "Đăng ký ngay" : "Đăng nhập"}
@@ -379,9 +406,7 @@ const AuthForm = () => {
                 <div className="mt-3 d-flex justify-content-center align-items-center gap-2">
                   <button
                     className="btn btn-link p-0"
-                    onClick={() => {
-                      navigate('/quen-mat-khau');
-                    }}
+                    onClick={() => navigate('/quen-mat-khau')}
                   >
                     Quên mật khẩu
                   </button>
@@ -391,7 +416,7 @@ const AuthForm = () => {
           </div>
         </div>
       </div>
-      <Footer/>
+      <Footer />
     </div>
   );
 };

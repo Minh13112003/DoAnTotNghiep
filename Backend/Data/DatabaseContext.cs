@@ -22,6 +22,7 @@ namespace DoAnTotNghiep.Data
         public DbSet<MovieRating> MovieRatings { get; set; }
         public DbSet<History> History { get; set; }
         public DbSet<PaymentOrder> PaymentOrder {  get; set; }
+        public DbSet<Notification> Notification { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -192,6 +193,18 @@ namespace DoAnTotNghiep.Data
                 p.Property(r => r.Status).HasColumnName("Status").HasColumnType("VARCHAR(10)").IsRequired(true);
                 p.Property(r => r.TransactionId).HasColumnName("TransactionId").HasColumnType("VARCHAR(250)").IsRequired(true);
                 p.Property(r => r.CreatedAt).HasColumnName("CreatedAt").HasColumnType("TIMESTAMP").IsRequired(true);
+
+            });
+            modelBuilder.Entity<Notification>(n =>
+            {
+                n.ToTable("Notification");
+                n.HasKey(k => k.IdNotice);
+                n.Property(p => p.IdNotice).HasColumnName("IdNotice").HasColumnType("VARCHAR(50)").IsRequired(true);
+                n.Property(p => p.UserName).HasColumnName("UserName").HasColumnType("VARCHAR(150)").IsRequired(true);
+                n.Property(p => p.Content).HasColumnName("Content").HasColumnType("VARCHAR(200)").IsRequired(true);
+                n.Property(p => p.Idcomment).HasColumnName("IdComment").HasColumnType("VARCHAR(50)").IsRequired(false);
+                n.Property(p => p.CreatedAt).HasColumnName("CreatedAt").HasColumnType("TIMESTAMP").IsRequired(true);
+                n.Property(p => p.TitleMovie).HasColumnName("TitleMovie").HasColumnType("VARCHAR(255)").IsRequired(false);
 
             });
             

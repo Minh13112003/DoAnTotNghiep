@@ -23,5 +23,13 @@ export const ResetPassword = (payload) => {
 export const GetVip =() => {
     return apiService.get(urls.URL_GetVip);
 }
-
+export const ChangeInfor = (payload) => {
+    return apiService.put(urls.URL_ChangeInfor, payload);
+}
+export const GetUser = () =>{
+    return apiService.get(urls.URL_GetUser);
+}
+export const DeleteUser = (username) =>{
+    return apiService.delete(`${urls.URL_DeleteUser}/${username}`);
+}
  

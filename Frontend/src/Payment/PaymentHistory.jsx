@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Container, Table, Button, Modal, Badge, Spinner } from 'react-bootstrap';
+import { Container, Table, Button, Modal, Badge, Spinner, Pagination, Form } from 'react-bootstrap';
 import { FaEye, FaCheckCircle, FaSpinner, FaTimesCircle } from 'react-icons/fa';
 import { GetDetailPayment, GetPaymentOrders } from '../apis/paymentAPI';
 import { toast } from 'react-toastify';
@@ -8,6 +8,7 @@ import { FaArrowLeft } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { DataContext } from '../ContextAPI/ContextNavbar';
 import Navbar from '../Dashboard/Navbar';
+
 const PaymentHistory = () => {
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
@@ -16,6 +17,11 @@ const PaymentHistory = () => {
     const [loading, setLoading] = useState(true);
     const [detailLoading, setDetailLoading] = useState(false);
     const { categories, movieTypes, nations, statuses, statusMap } = useContext(DataContext);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10);
+    const [searchType, setSearchType] = useState("Tất cả");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filteredPayment, setFilteredPayment] = useState([]);
     const navigate = useNavigate();
     const handleGoBack = () => {
         navigate(-1);
@@ -23,6 +29,59 @@ const PaymentHistory = () => {
     useEffect(() => {
         fetchPaymentHistory();
     }, []);
+    useEffect(() => {
+        const debounceSearch = setTimeout(() => {
+          if (searchTerm.trim() === "") {
+            setFilteredPayment(paymentHistory); // Reset to all movies if search term is empty
+            return;
+          }
+          const filtered = paymentHistory.filter((payment) => {
+            
+            const searchValue = searchTerm.toLowerCase();
+            const normalizedSearchValue = searchValue.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            switch (searchType) {
+              case "Mã đơn hàng":
+                return (payment.orderCode || "").toString().includes(normalizedSearchValue);
+              case "Tên gói dịch vụ":
+                return (payment.item).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(normalizedSearchValue);
+              case "Trạng thái":
+                return (payment.status).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(normalizedSearchValue);
+              case "Tất cả":
+                return (payment.orderCode || "").toString().includes(searchValue) || (payment.item).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(normalizedSearchValue)
+                || (payment.status).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(normalizedSearchValue);
+              default:
+                return true;
+            }
+          });
+    
+          setFilteredPayment(filtered);
+          setCurrentPage(1); // Reset to first page on search
+        }, 1000); // 1-second delay
+        return () => clearTimeout(debounceSearch); // Cleanup timeout
+  }, [searchTerm, searchType, paymentHistory]); // Trigger on searchTerm or searchType change
+
+    const renderPagination = () => {
+        let items = [];
+        for (let number = 1; number <= totalPages; number++) {
+            items.push(
+                <Pagination.Item 
+                    key={number} 
+                    active={number === currentPage}
+                    onClick={() => handlePageChange(number)}
+                >
+                    {number}
+                </Pagination.Item>
+            );
+        }
+        return items;
+    };
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredPayment.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredPayment.length / itemsPerPage);
 
     const fetchPaymentHistory = async () => {
         try {
@@ -30,6 +89,7 @@ const PaymentHistory = () => {
             const response = await GetPaymentOrders();
             if (response && response.data && Array.isArray(response.data.data)) {
                 setPaymentHistory(response.data.data);
+                setFilteredPayment(response.data.data);
             } else {
                 console.error('Invalid payment history data format:', response);
                 toast.error('Định dạng dữ liệu không hợp lệ');
@@ -104,7 +164,33 @@ const PaymentHistory = () => {
                     Quay lại
                 </Button>
             </div>
-            <h2 className="text-center mb-4">Lịch sử thanh toán</h2>
+            <div className="search-bar d-flex align-items-center me-3">
+                                <Form.Select
+                                className="me-2"
+                                style={{ width: "200px" }}
+                                value={searchType}
+                                onChange={(e) => {
+                                    e.preventDefault();
+                                    setSearchType(e.target.value);
+                                }}
+                                >
+                                <option value="Tất cả">Tất cả</option>
+                                <option value="Mã đơn hàng">Mã đơn hàng</option>
+                                <option value="Tên gói dịch vụ">Tên gói dịch vụ</option>
+                                <option value="Trạng thái">Trạng thái</option>
+                                </Form.Select>
+                                <Form.Control
+                                type="text"
+                                placeholder="Nhập thông tin tìm kiếm..."
+                                className="me-4"
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    e.preventDefault();
+                                    setSearchTerm(e.target.value);
+                                }}
+                                />
+            </div>
+            <h2 className="text-center mb-4" style={{color: 'white'}}>Lịch sử thanh toán</h2>
             
             <div className="table-responsive">
                 <Table className="payment-table">
@@ -118,8 +204,8 @@ const PaymentHistory = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {paymentHistory && paymentHistory.length > 0 ? (
-                            paymentHistory.map((order) => (
+                        {currentItems && paymentHistory.length > 0 ? (
+                            currentItems.map((order) => (
                                 <tr key={order.idPaymentOrder}>
                                     <td>{order.orderCode}</td>
                                     <td>{order.item}</td>
@@ -145,6 +231,27 @@ const PaymentHistory = () => {
                         )}
                     </tbody>
                 </Table>
+                <div className="d-flex justify-content-center mt-4">
+                                <Pagination>
+                                    <Pagination.First 
+                                        onClick={() => handlePageChange(1)}
+                                        disabled={currentPage === 1}
+                                    />
+                                    <Pagination.Prev 
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 1}
+                                    />
+                                    {renderPagination()}
+                                    <Pagination.Next 
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={currentPage === totalPages}
+                                    />
+                                    <Pagination.Last 
+                                        onClick={() => handlePageChange(totalPages)}
+                                        disabled={currentPage === totalPages}
+                                    />
+                                </Pagination>
+                            </div>
             </div>
 
             {/* Modal Chi tiết đơn hàng */}

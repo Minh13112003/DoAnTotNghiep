@@ -151,5 +151,13 @@ namespace DoAnTotNghiep.Controllers
             if (detailPayment == null) return BadRequest(new { message = "Không tìm thấy đơn hàng" });
             return Ok(detailPayment);
         }
+        [Authorize]
+        [HttpPost("Payos/CancelPayment/{ordercode}")]
+        public async Task<IActionResult> CancelPayment([FromRoute] long ordercode)
+        {
+            var cancelpayment = await _payOsService.CancelPaymentOrder(ordercode);
+            if (cancelpayment == true) return Ok(new { message = "Hủy đơn thành công" });
+            return BadRequest(new { message = "Đã có lỗi xảy ra" });
+        }
     }
 }

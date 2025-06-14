@@ -510,10 +510,10 @@ namespace DoAnTotNghiep.Repository
                 SlugNameDirector = SlugHelper.Slugify(movieToAddDTOs.NameDirector),
                 IsVip = movieToAddDTOs.IsVip,
                 View = 0,
-                Image = movieToAddDTOs.Image,
-                BackgroundImage = movieToAddDTOs.BackgroundImage,
                 SlugNation = SlugHelper.Slugify(movieToAddDTOs.Nation),
-                Point = 0
+                Point = 0,
+                Image = "hihi",
+                BackgroundImage = "haha"
             };
             await _dbContext.Movies.AddAsync(movie);
 
@@ -1284,8 +1284,6 @@ namespace DoAnTotNghiep.Repository
             existingMovie.NameDirector = movieToAddDTOs.NameDirector;
             existingMovie.SlugNameDirector = SlugHelper.Slugify(movieToAddDTOs.NameDirector);
             existingMovie.IsVip = movieToAddDTOs.IsVip;
-            existingMovie.Image = movieToAddDTOs.Image;
-            existingMovie.BackgroundImage = movieToAddDTOs.BackgroundImage;
 
             // Xóa tất cả SubCategory cũ liên quan đến Movie
             var oldSubCategories = _dbContext.SubCategories

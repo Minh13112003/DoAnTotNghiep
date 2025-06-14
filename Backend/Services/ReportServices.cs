@@ -1,4 +1,5 @@
 ﻿using DoAnTotNghiep.DTOs;
+using DoAnTotNghiep.Model;
 using DoAnTotNghiep.Repository;
 
 namespace DoAnTotNghiep.Services
@@ -15,6 +16,16 @@ namespace DoAnTotNghiep.Services
             return await _repository.DeleteReport(IdReport);
         }
 
+        public async Task<bool> ExecuteCommentReport(string IdComment, string UserName)
+        {
+            return await _repository.ExecuteCommentReport(IdComment, UserName);
+        }
+
+        public async Task<List<Report>> GetCommentReport(string IdComment, string UserName)
+        {
+            return await _repository.GetCommentReport(IdComment, UserName);
+        }
+
         public async Task<List<ReportToShowDTOs>> GetReportAdmin(string UserNameAdminFix)
         {
             return await _repository.GetReportAdmin(UserNameAdminFix);
@@ -28,6 +39,11 @@ namespace DoAnTotNghiep.Services
         public Task<bool> ReceiveReport(string IdReport, string UserNameAdminFix)
         {
             return _repository.ReceiveReport(IdReport, UserNameAdminFix);
+        }
+
+        public async Task<bool> ResponseCommentReports(List<ResponseReport> reportResponses, string UserName)
+        {
+            return await _repository.ResponseCommentReports(reportResponses, UserName);
         }
 
         public async Task<bool> ResponseReport(string UserNameAdminFix, ResponseReport responseReport)

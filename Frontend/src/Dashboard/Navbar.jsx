@@ -6,6 +6,7 @@ import { useData } from '../ContextAPI/ContextNavbar';
 import './Navbar.css';
 import Cookies from 'js-cookie';
 import { FaCrown } from 'react-icons/fa';
+import avatar_default from '../assets/images/avatar_default.png'
 
 const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
     const navigate = useNavigate();
@@ -22,12 +23,16 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
     const userMenuRef = useRef(null);
     const [userRole, setUserRole] = useState(null);
     const [isSearching, setIsSearching] = useState(false);
-    const { searchMovies, keyword, setKeyword } = useData();
-    const {Username} = Cookies.get("username");
+    const {searchMovies, keyword, setKeyword } = useData();
+    const [userName, setUserName] = useState();
+    const avatar_img = Cookies.get("avatar");
+    const image = avatar_img !== 'undefined' ? avatar_img : avatar_default;
+
     useEffect(() => {
         const token = Cookies.get('accessToken');
         const userData = JSON.parse(localStorage.getItem('userData'));
-        
+        const {Username} = Cookies.get("username")? Cookies.get("username") : "AppUser";    
+        setUserName(Username);
         setIsLoggedIn(!!token);
         if (userData) {
             setUserRole(userData.roles);
@@ -57,6 +62,7 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
         Cookies.remove('accessToken');
         Cookies.remove('username');
         Cookies.remove('refreshToken');
+        Cookies.remove('avatar');
         localStorage.removeItem('userData');
         setIsLoggedIn(false);
         setShowUserMenu(false);
@@ -87,8 +93,8 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
                 onClick={() => setShowUserMenu(!showUserMenu)}
             >
                 <img
-                    src="/path/to/default-avatar.png"
-                    alt= {Username}
+                    src={image}
+                    alt= {userName}
                     className="user-avatar"
                 />
             </div>

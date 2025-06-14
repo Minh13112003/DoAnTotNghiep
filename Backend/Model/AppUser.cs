@@ -14,5 +14,8 @@ namespace DoAnTotNghiep.Model
         public DateTime RefreshTokenExpiryTime { get; set; }
         public DateTime? TimeTopUp { get; set; }
         public DateTime? ExpirationTime { get; set; }
+        public string? Nickname { get; set; }
+        public string? Image {  get; set; }
+        public string? VerificationCode { get; set; }
     }
 }
