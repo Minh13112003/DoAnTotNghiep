@@ -37,7 +37,7 @@ export const slidebarMenus = [
         title: 'Quản lý Góp ý',
         icon: <FaEnvelope />,
         items: [
-            { title: 'Danh sách góp ý', link: '/quan-ly/gop-y' },
+            { title: 'Danh sách báo cáo', link: '/quan-ly/bao-cao' },
         ]
     }
 ];

@@ -29,6 +29,7 @@ import PaymentCancel from './Payment/PaymentCancel';
 import PaymentHistory from './Payment/PaymentHistory';
 import CommentManagement from './Admin/CommentManagement';
 import AccountManagement from './Admin/AccountManagement';
+import ReportManagement from './Admin/ReportManagement';
 
 function App() {
   return (
@@ -64,6 +65,7 @@ function App() {
           <Route path="/danh-sach-thanh-toan" element={<PaymentHistory />} />
           <Route path="/quan-ly/binh-luan" element={<CommentManagement />} />
           <Route path="/quan-ly/tai-khoan/danh-sach" element={<AccountManagement />} />
+          <Route path="/quan-ly/bao-cao" element={<ReportManagement />} />
         </Routes>
       </Router>
     </DataProvider>

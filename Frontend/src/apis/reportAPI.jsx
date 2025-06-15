@@ -14,3 +14,23 @@ export const ResponseCommentReport = (ResponseReport) =>{
 export const GetCommentReport = (Idcomment) =>{
     return apiService.get(`${urls.URL_GetCommentReport}/${Idcomment}`)
 }
+
+export const GetReportComment = () =>{
+    return apiService.get(`${urls.URL_GetReportComment}`)
+}
+
+export const GetReportMovie = () =>{
+    return apiService.get(`${urls.URL_GetReportMovie}`)
+}
+
+export const GetReportSystem = () =>{
+    return apiService.get(`${urls.URL_GetReportSystem}`)
+}
+
+export const ReceiveReport = (IdReport) =>{
+    return apiService.put(`${urls.URL_ReceiveReport}/${IdReport}`)
+}
+
+export const ResponseReport = (idReport, response) =>{
+    return apiService.put(`${urls.URL_ResponseReport}`, {idReport, response})
+}
