@@ -30,6 +30,7 @@ import PaymentHistory from './Payment/PaymentHistory';
 import CommentManagement from './Admin/CommentManagement';
 import AccountManagement from './Admin/AccountManagement';
 import ReportManagement from './Admin/ReportManagement';
+import ReportHistory from './LoginAndRegis/ReportHistory';
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
           <Route path='/quan-ly' element={<DashBoardAdmin/>}/>
           <Route path='/yeu-thich' element={<ListFavoriteFilm/>}/>
           <Route path='/lich-su-xem' element={<ListHistoryFilm/>}/>
+          <Route path='/lich-su-bao-cao' element={<ReportHistory/>}/>
           <Route path='/quan-ly/phim/danh-sach' element={<MovieManagement/>}/>
           <Route path="/quan-ly/the-loai/danh-sach" element={<CategoryManagement />} />
           <Route path="/quan-ly/phim/tap-phim" element={<EpisodeManagement />} />

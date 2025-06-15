@@ -43,6 +43,7 @@ export const URL_GetReportMovie = `${URL_BASE}/report/GetReportMovie`
 export const URL_GetReportSystem = `${URL_BASE}/report/GetReportSystem`
 export const URL_ReceiveReport= `${URL_BASE}/report/ReceiveReport`
 export const URL_ResponseReport= `${URL_BASE}/report/ResponseReport`
+export const URL_SelfReport= `${URL_BASE}/report/GetSelfReport`
 
 //Comment API
 export const URL_AddComment = `${URL_BASE}/comment/AddComment`;

@@ -34,3 +34,7 @@ export const ReceiveReport = (IdReport) =>{
 export const ResponseReport = (idReport, response) =>{
     return apiService.put(`${urls.URL_ResponseReport}`, {idReport, response})
 }
+
+export const SelfReport = () =>{
+    return apiService.get(`${urls.URL_SelfReport}`)
+}

@@ -7,6 +7,8 @@ import './Navbar.css';
 import Cookies from 'js-cookie';
 import { FaCrown } from 'react-icons/fa';
 import avatar_default from '../assets/images/avatar_default.png'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faClockRotateLeft } from '@fortawesome/free-solid-svg-icons';
 
 const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
     const navigate = useNavigate();
@@ -18,6 +20,7 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
         userMenu: false,
         admin: false,
     });
+
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const userMenuRef = useRef(null);
@@ -109,14 +112,6 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
                         Xem thông tin tài khoản
                     </Link>
                     <Link 
-                        to="/edit-profile" 
-                        className="dropdown-item"
-                        onClick={() => setShowUserMenu(false)}
-                    >
-                        <i className="fas fa-edit me-2"></i>
-                        Thay đổi thông tin
-                    </Link>
-                    <Link 
                         to="/danh-sach-thanh-toan" 
                         className="dropdown-item"
                         onClick={() => setShowUserMenu(false)}
@@ -124,6 +119,16 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
                         <i className="fas fa-receipt me-2"></i>
                         Danh sách thanh toán
                     </Link>
+                    {userRole !== 'Admin' && (
+                        <Link 
+                            to="/lich-su-bao-cao" 
+                            className="dropdown-item"
+                            onClick={() => setShowUserMenu(false)}
+                        >
+                            <FontAwesomeIcon icon={faClockRotateLeft} className='me-3'/>
+                            Lịch sử báo cáo
+                        </Link>                        
+                    )}
                     <div className="dropdown-divider"></div>
                     <button 
                         onClick={handleLogout}
