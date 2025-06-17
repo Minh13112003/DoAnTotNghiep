@@ -14,6 +14,7 @@
         public string? Phonenumber { get; set; }
         public string? Password { get; set; }
         public bool? isVip { get; set; }
+        public string? NewEmail { get; set; }
 
     }
 }

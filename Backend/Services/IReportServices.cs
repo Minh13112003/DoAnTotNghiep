@@ -15,5 +15,8 @@ namespace DoAnTotNghiep.Services
         Task<bool> ExecuteCommentReport(string IdComment, string UserName);
 
         Task<bool> ResponseCommentReports(List<ResponseReport> reportResponses, string UserName);
+        Task<List<ReportToShowDTOs>> GetReportMovie(string UserNameAdminFix);
+        Task<List<ReportToShowDTOs>> GetReportComment(string UserNameAdminFix);
+        Task<List<ReportToShowDTOs>> GetNotificationAdmin(string UserNameAdminFix);
     }
 }

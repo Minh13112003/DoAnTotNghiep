@@ -54,9 +54,9 @@ namespace DoAnTotNghiep.Services
             return await _movieRepository.GetHistoryMovie(UserName, pageNumber, pageSize);
         }
 
-        public async Task<List<MovieToShowDTOs>> GetMovieByActor(string actor)
+        public async Task<PaginatedMoviesResultDTO> GetMovieByActor(string actor, int pageNumber, int pageSize)
         {
-            return await _movieRepository.GetMovieByActor(actor);
+            return await _movieRepository.GetMovieByActor(actor, pageNumber, pageSize);
         }
 
         public async Task<PaginatedMoviesResultDTO> GetMovieByCategory(string category, int pageNumber, int pageSize)

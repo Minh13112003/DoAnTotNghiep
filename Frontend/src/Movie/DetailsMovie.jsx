@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Spinner, Modal, Form } from 'react-bootstrap';
-import { FaUserTie, FaHeart, FaEye, FaPlay, FaCalendar, FaTheaterMasks, FaClock, FaLanguage, FaRocket, FaComment, FaStar } from 'react-icons/fa';
+import { FaUserTie, FaHeart, FaEye, FaPlay, FaCalendar, FaTheaterMasks, FaClock, FaLanguage, FaRocket, FaComment, FaStar, FaArrowLeft } from 'react-icons/fa';
 import { MdHighQuality } from 'react-icons/md';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import slugify from '../Helper/Slugify';
@@ -40,6 +40,9 @@ const DetailsMovie = () => {
     const isAuthenticated = () => {
         return !!Cookies.get('accessToken');
     };
+    const handleGoBack = () => {
+        navigate(-1);
+    };
 
     useEffect(() => {
         const fetchMovie = async () => {
@@ -57,7 +60,6 @@ const DetailsMovie = () => {
                         setRating(ratingResponse.data.rating);
                         setHasRated(true);
                     } else {
-                        console.log("hi");
                         setUserRating(null);
                         setHasRated(false);
                     }
@@ -290,6 +292,12 @@ const DetailsMovie = () => {
                 minHeight: '50vh'
             }}>
                 <Container>
+                <div className="mb-4">
+                    <Button variant="outline-secondary" onClick={handleGoBack}>
+                        <FaArrowLeft className="me-2" />
+                        Quay lại
+                    </Button>
+                </div>
                     <Row className="g-4">
                         <Col md={4}>
                             <Card className="border-0 h-100">
@@ -365,6 +373,12 @@ const DetailsMovie = () => {
                                                 : typeof movie.nameActors === 'string'
                                                 ? movie.nameActors
                                                 : 'Không rõ'}</span>
+                                        </div>
+                                    </Col>
+                                    <Col sm={6} md={4}>
+                                        <div className="d-flex align-items-center">
+                                            <FaStar className="text-warning me-2" />
+                                            <span>{movie.point}/5</span>
                                         </div>
                                     </Col>
                                 </Row>

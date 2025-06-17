@@ -124,8 +124,11 @@ const AccountManagement = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try { 
-            const editData = { ...formData };
-            editData.birthday;                 
+            const editData = { ...formData
+             };
+            delete editData.birthday;
+            delete editData.nickName; 
+            console.log(editData);                
             // const response = await fetch('http://localhost:5285/api/User/ChangeInfor', {
             //     method: 'PUT',
             //     headers: {
@@ -133,10 +136,10 @@ const AccountManagement = () => {
             //     },
             //     body: JSON.stringify(formData)
             // });
-            // const response 
+            const response = await ChangeInfor(editData);
 
-            if (response.ok) {
-                toast.success('Cập nhật thông tin người dùng thành công');
+            if (response.status === 200) {
+                toast.success('Cập nhật thông tin admin thành công');
                 setShowModal(false);
                 fetchUsers();
             } else {
@@ -491,7 +494,8 @@ const AccountManagement = () => {
                                 <div className="col-sm-9">
                                     <DatePicker
                                     selected={formData.birthday}
-                                    onChange={(e) => setFormData({...formData, birthday: e.target.value})}
+                                    value={formData.birthday}
+                                    onChange={(date) => setFormData({...formData, birthday: date})}
                                     dateFormat="yyyy-MM-dd"
                                     className={`form-control ${errors.birthday ? 'is-invalid' : ''}`}
                                     showYearDropdown

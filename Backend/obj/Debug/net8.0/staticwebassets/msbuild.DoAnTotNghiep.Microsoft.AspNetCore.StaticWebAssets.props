@@ -112,6 +112,54 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\BackgroundImageMovie\2cbde46c-d1cc-48ac-b6ce-cdc3bea0780c.jpg))</OriginalItemSpec>
     </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\BackgroundImageMovie\59697d11-a44c-4148-a510-a9b1805e91ca.jpg))">
+      <SourceType>Package</SourceType>
+      <SourceId>DoAnTotNghiep</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/DoAnTotNghiep</BasePath>
+      <RelativePath>Images/BackgroundImageMovie/59697d11-a44c-4148-a510-a9b1805e91ca.jpg</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\BackgroundImageMovie\59697d11-a44c-4148-a510-a9b1805e91ca.jpg))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\BackgroundImageMovie\668e7a67-4c0a-41af-a9bd-3660bffa0a2e.jpg))">
+      <SourceType>Package</SourceType>
+      <SourceId>DoAnTotNghiep</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/DoAnTotNghiep</BasePath>
+      <RelativePath>Images/BackgroundImageMovie/668e7a67-4c0a-41af-a9bd-3660bffa0a2e.jpg</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\BackgroundImageMovie\668e7a67-4c0a-41af-a9bd-3660bffa0a2e.jpg))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\BackgroundImageMovie\9213972d-c134-4fd0-ae98-40a356257b8d.jpg))">
+      <SourceType>Package</SourceType>
+      <SourceId>DoAnTotNghiep</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/DoAnTotNghiep</BasePath>
+      <RelativePath>Images/BackgroundImageMovie/9213972d-c134-4fd0-ae98-40a356257b8d.jpg</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\BackgroundImageMovie\9213972d-c134-4fd0-ae98-40a356257b8d.jpg))</OriginalItemSpec>
+    </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\BackgroundImageMovie\98d68e9c-7e73-4974-bb45-852b7add6f46.jpg))">
       <SourceType>Package</SourceType>
       <SourceId>DoAnTotNghiep</SourceId>
@@ -143,6 +191,22 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\BackgroundImageMovie\abad02bf-2c29-4b63-bdc7-e713bf75fa25.jpg))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\BackgroundImageMovie\ba61dae5-2e78-4052-8aa7-86f630cb4628.jpg))">
+      <SourceType>Package</SourceType>
+      <SourceId>DoAnTotNghiep</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/DoAnTotNghiep</BasePath>
+      <RelativePath>Images/BackgroundImageMovie/ba61dae5-2e78-4052-8aa7-86f630cb4628.jpg</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\BackgroundImageMovie\ba61dae5-2e78-4052-8aa7-86f630cb4628.jpg))</OriginalItemSpec>
     </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\BackgroundImageMovie\c0f956b0-b71d-487e-90dd-af09722e317c.jpg))">
       <SourceType>Package</SourceType>
@@ -272,6 +336,22 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\BackgroundImageMovie\fd982d86-ed60-4e58-b69a-2c00e920e1e1.jpg))</OriginalItemSpec>
     </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\ImageMovie\0ec9eb79-a6aa-4044-a018-8128ffe1d084.jpg))">
+      <SourceType>Package</SourceType>
+      <SourceId>DoAnTotNghiep</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/DoAnTotNghiep</BasePath>
+      <RelativePath>Images/ImageMovie/0ec9eb79-a6aa-4044-a018-8128ffe1d084.jpg</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\ImageMovie\0ec9eb79-a6aa-4044-a018-8128ffe1d084.jpg))</OriginalItemSpec>
+    </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\ImageMovie\0fa9e50c-e729-4802-a794-2d2eab7e91ce.jpg))">
       <SourceType>Package</SourceType>
       <SourceId>DoAnTotNghiep</SourceId>
@@ -287,6 +367,22 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\ImageMovie\0fa9e50c-e729-4802-a794-2d2eab7e91ce.jpg))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\ImageMovie\153268c7-7be1-414a-9a60-fa77990644c7.jpg))">
+      <SourceType>Package</SourceType>
+      <SourceId>DoAnTotNghiep</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/DoAnTotNghiep</BasePath>
+      <RelativePath>Images/ImageMovie/153268c7-7be1-414a-9a60-fa77990644c7.jpg</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\ImageMovie\153268c7-7be1-414a-9a60-fa77990644c7.jpg))</OriginalItemSpec>
     </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\ImageMovie\189bb8a3-feb9-4967-85aa-560ecacd8e2f.jpg))">
       <SourceType>Package</SourceType>
@@ -304,6 +400,54 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\ImageMovie\189bb8a3-feb9-4967-85aa-560ecacd8e2f.jpg))</OriginalItemSpec>
     </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\ImageMovie\1add1202-79f7-4e56-95cb-55a6f15fb21e.jpg))">
+      <SourceType>Package</SourceType>
+      <SourceId>DoAnTotNghiep</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/DoAnTotNghiep</BasePath>
+      <RelativePath>Images/ImageMovie/1add1202-79f7-4e56-95cb-55a6f15fb21e.jpg</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\ImageMovie\1add1202-79f7-4e56-95cb-55a6f15fb21e.jpg))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\ImageMovie\20b99fe0-602e-45ec-b88c-ddd19f68b746.jpg))">
+      <SourceType>Package</SourceType>
+      <SourceId>DoAnTotNghiep</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/DoAnTotNghiep</BasePath>
+      <RelativePath>Images/ImageMovie/20b99fe0-602e-45ec-b88c-ddd19f68b746.jpg</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\ImageMovie\20b99fe0-602e-45ec-b88c-ddd19f68b746.jpg))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\ImageMovie\34b4405a-dd4f-4e51-a97f-cd6e867785de.jpg))">
+      <SourceType>Package</SourceType>
+      <SourceId>DoAnTotNghiep</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/DoAnTotNghiep</BasePath>
+      <RelativePath>Images/ImageMovie/34b4405a-dd4f-4e51-a97f-cd6e867785de.jpg</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\ImageMovie\34b4405a-dd4f-4e51-a97f-cd6e867785de.jpg))</OriginalItemSpec>
+    </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\ImageMovie\6445812d-827a-4f8b-a767-8b4a33bdea5d.jpg))">
       <SourceType>Package</SourceType>
       <SourceId>DoAnTotNghiep</SourceId>
@@ -319,6 +463,22 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\ImageMovie\6445812d-827a-4f8b-a767-8b4a33bdea5d.jpg))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\ImageMovie\c25408dd-a657-475d-b04c-48b77a604bae.jpg))">
+      <SourceType>Package</SourceType>
+      <SourceId>DoAnTotNghiep</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/DoAnTotNghiep</BasePath>
+      <RelativePath>Images/ImageMovie/c25408dd-a657-475d-b04c-48b77a604bae.jpg</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\ImageMovie\c25408dd-a657-475d-b04c-48b77a604bae.jpg))</OriginalItemSpec>
     </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\Images\ImageMovie\ced05bf4-36e5-49b0-9790-5a8b8614ffde.jpg))">
       <SourceType>Package</SourceType>

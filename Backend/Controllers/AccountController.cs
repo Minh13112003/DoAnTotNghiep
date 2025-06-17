@@ -388,7 +388,10 @@ namespace DoAnTotNghiep.Controllers
         [HttpPut("ChangeAccountInfor")]
         public async Task<IActionResult> ChangeAccountInfor(UserToken userDTO)
         {
-            var UserName = User.Identity?.Name;
+
+            var UserName = string.IsNullOrEmpty(userDTO.UserName)
+                ? User.Identity?.Name
+                : userDTO.UserName;
             var user = await _userManager.FindByNameAsync(UserName!);
 
             if (user != null)
@@ -407,30 +410,23 @@ namespace DoAnTotNghiep.Controllers
                 }
                 if (userDTO.isVip == true)
                 {
-                    var now = DateTimeHelper.GetDateTimeVnNowWithDateTime();
+                    var now = DateTimeHelper.GetDateTimeVnNowWithDateTimeUTC();
                     //Nạp lần đầu hoặc lâu mới nạp
                     if (user.TimeTopUp == null || user.ExpirationTime < now)
                     {
-                        user.TimeTopUp = DateTimeHelper.GetDateTimeVnNowWithDateTime();
+                        user.TimeTopUp = DateTimeHelper.GetDateTimeVnNowWithDateTimeUTC();
                         user.ExpirationTime = user.TimeTopUp.Value.AddDays(3);
                     }
                     else //Nạp duy trì
                     {
-                        user.TimeTopUp = DateTimeHelper.GetDateTimeVnNowWithDateTime();
+                        user.TimeTopUp = DateTimeHelper.GetDateTimeVnNowWithDateTimeUTC();
                         user.ExpirationTime = user.ExpirationTime.Value.AddDays(3);
                     }
                     user.IsVip = true;
                     isUpdated = true;
                 }
 
-                if (isUpdated)
-                {
-                    var updateResult = await _userManager.UpdateAsync(user);
-                    if (!updateResult.Succeeded)
-                    {
-                        return BadRequest(new { message = "Cập nhật thông tin thất bại." });
-                    }
-                }
+                
 
                 if (!string.IsNullOrEmpty(userDTO.Password))
                 {
@@ -442,9 +438,17 @@ namespace DoAnTotNghiep.Controllers
                         {
                             return BadRequest(new { message = "Đổi mật khẩu thất bại." });
                         }
+                        isUpdated = true;
                     }
                 }
-                
+                if (isUpdated)
+                {
+                    var updateResult = await _userManager.UpdateAsync(user);
+                    if (!updateResult.Succeeded)
+                    {
+                        return BadRequest(new { message = "Cập nhật thông tin thất bại." });
+                    }
+                }
 
                 return Ok(new { message = "Cập nhật thông tin thành công." });
             }
@@ -473,5 +477,21 @@ namespace DoAnTotNghiep.Controllers
             var result = await usersInRoleUser.ToListAsync();
             return Ok(result);
         }
+        /*[HttpPost("UpNotification")]
+        public async Task<IActionResult> UpNotification(UserToken userDTO)
+        {
+            if(string.IsNullOrEmpty(userDTO.UserName) || string.IsNullOrEmpty(userDTO.Email) || string.IsNullOrEmpty(userDTO.NewEmail) || string.IsNullOrEmpty(userDTO.VerfiCode))
+            {
+                return BadRequest(new { message = "Thiếu thông tin" });
+            }
+            var user = await _userManager.FindByNameAsync(userDTO.UserName);
+            if (user == null)
+            {
+                return BadRequest(new { message = "Không tìm thấy người dùng" });
+            }
+            if (user.VerificationCode != userDTO.VerfiCode) return BadRequest(new { message = "Sai mã xác thực" });
+
+        }*/
+
     }
 }

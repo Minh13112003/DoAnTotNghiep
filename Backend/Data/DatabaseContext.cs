@@ -153,6 +153,7 @@ namespace DoAnTotNghiep.Data
                 b.Property(r => r.TimeResponse).HasColumnName("TimeResponse").HasColumnType("VARCHAR(50)").IsRequired(false);
                 b.Property(r => r.Status).HasColumnName("Status").IsRequired(true);
                 b.Property(r => r.IdComment).HasColumnName("IdComment").HasColumnType("VARCHAR(50)").IsRequired(false);
+                b.Property(r => r.Type).HasColumnName("Type").HasColumnType("VARCHAR(20)");
 
                 b.HasOne(r => r.Movie)
                     .WithMany(b => b.Reports)
@@ -205,7 +206,6 @@ namespace DoAnTotNghiep.Data
                 n.Property(p => p.Idcomment).HasColumnName("IdComment").HasColumnType("VARCHAR(50)").IsRequired(false);
                 n.Property(p => p.CreatedAt).HasColumnName("CreatedAt").HasColumnType("TIMESTAMP").IsRequired(true);
                 n.Property(p => p.TitleMovie).HasColumnName("TitleMovie").HasColumnType("VARCHAR(255)").IsRequired(false);
-
             });
             
             

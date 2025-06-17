@@ -19,6 +19,13 @@
             DateTime vietnamTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamZone);
             return vietnamTime;
         }
+        public static DateTime GetDateTimeVnNowWithDateTimeUTC()
+        {
+            TimeZoneInfo vietnamZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            DateTime vietnamTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamZone);
+            DateTime utcTime = vietnamTime.ToUniversalTime(); // Chuyển về UTC
+            return DateTime.SpecifyKind(utcTime, DateTimeKind.Utc); // Đảm bảo Kind=UTC
+        }
         public static string ToStringDateTime(DateTime vietnamTime)
         {
             return vietnamTime.ToString("dd/MM/yyyy HH:mm:ss");

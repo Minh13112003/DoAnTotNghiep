@@ -5,6 +5,8 @@ import Navbar from '../Dashboard/Navbar';
 import Footer from '../Dashboard/Footer';
 import { DataContext } from "../ContextAPI/ContextNavbar";
 import CommentSection from './CommentSection'
+import { GetLinkMovieByIdMovie } from '../apis/linkmovieAPI';
+import { FaUserTie, FaHeart, FaEye, FaPlay, FaCalendar, FaTheaterMasks, FaClock, FaLanguage, FaRocket, FaComment, FaStar, FaArrowLeft } from 'react-icons/fa';
 const SeeMovie = () => {
     const { idAndSlug } = useParams();
     const navigate = useNavigate();
@@ -17,15 +19,22 @@ const SeeMovie = () => {
     const { categories, movieTypes, nations, statuses, statusMap } = useContext(DataContext);
     const [videoData, setVideoData] = useState([]);
     const [selectedEpisode, setSelectedEpisode] = useState(null);
+    const [movie, setMovie] = useState([]);
+    const handleGoBack = () => {
+        navigate(-1);
+    };
 
     useEffect(() => {
         const fetchMovie = async () => {
             try {
                 // Lấy danh sách link phim
-                const response = await fetch(`http://localhost:5285/api/linkmovie/GetLinkMovieByIdMovie/${id}`);
-                const data = await response.json();                
+                // const response = await fetch(`http://localhost:5285/api/linkmovie/GetLinkMovieByIdMovie/${id}`);
+                const response = await GetLinkMovieByIdMovie(id);
+                setMovie(response.data);
+                console.log("HIHI"); 
+                console.log(response.data);     
                 // Sắp xếp theo episode từ nhỏ đến lớn
-                const sortedData = data.sort((a, b) => a.episode - b.episode);
+                const sortedData = response.data.sort((a, b) => a.episode - b.episode);
                 setVideoData(sortedData);
                 // Kiểm tra nếu có episode trong URL
                 if (episode && sortedData.length > 0) {
@@ -41,6 +50,7 @@ const SeeMovie = () => {
                     // Nếu không có episode trong URL, set tập đầu tiên
                     setSelectedEpisode(sortedData[0]);
                 }
+                
             } catch (error) {
                 console.error('Error fetching movie data:', error);
             }
@@ -71,7 +81,8 @@ const SeeMovie = () => {
         <div>
             <Navbar categories={categories} movieTypes={movieTypes} nations={nations} statuses={statuses} statusMap={statusMap} />
             <Container className="mt-4 text-center">
-                <h2 className="mb-4">Xem Phim</h2>
+                {/* <h2 className="mb-4" style={{color : 'white'}}>Xem Phim</h2> */}
+                <h2 className="mb-4" style={{color : 'White', margin : '70px'}}>Xem Phim {movie[0]?.title}</h2>
                 <Row className="justify-content-center">
                     <Col md={8}>
                         {selectedEpisode && (

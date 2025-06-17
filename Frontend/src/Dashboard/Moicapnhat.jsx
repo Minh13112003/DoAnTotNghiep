@@ -1,5 +1,5 @@
 import React from 'react';
-import './MoiCapNhat.css'; 
+import './Moicapnhat.css'; 
 import { Link } from 'react-router-dom';
 const MoiCapNhat = ({ movies, type, links }) => {
     return (

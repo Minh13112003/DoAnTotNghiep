@@ -26,9 +26,24 @@ namespace DoAnTotNghiep.Services
             return await _repository.GetCommentReport(IdComment, UserName);
         }
 
+        public async Task<List<ReportToShowDTOs>> GetNotificationAdmin(string UserNameAdminFix)
+        {
+            return await _repository.GetNotificationAdmin(UserNameAdminFix);
+        }
+
         public async Task<List<ReportToShowDTOs>> GetReportAdmin(string UserNameAdminFix)
         {
             return await _repository.GetReportAdmin(UserNameAdminFix);
+        }
+
+        public async Task<List<ReportToShowDTOs>> GetReportComment(string UserNameAdminFix)
+        {
+            return await _repository.GetReportComment(UserNameAdminFix);
+        }
+
+        public async Task<List<ReportToShowDTOs>> GetReportMovie(string UserNameAdminFix)
+        {
+            return await _repository.GetReportMovie(UserNameAdminFix);
         }
 
         public async Task<List<ReportToShowDTOs>> GetSelfReport(string UserNameReporter)
@@ -36,9 +51,9 @@ namespace DoAnTotNghiep.Services
             return await _repository.GetSelfReport(UserNameReporter);
         }
 
-        public Task<bool> ReceiveReport(string IdReport, string UserNameAdminFix)
+        public async Task<bool> ReceiveReport(string IdReport, string UserNameAdminFix)
         {
-            return _repository.ReceiveReport(IdReport, UserNameAdminFix);
+            return await _repository.ReceiveReport(IdReport, UserNameAdminFix);
         }
 
         public async Task<bool> ResponseCommentReports(List<ResponseReport> reportResponses, string UserName)

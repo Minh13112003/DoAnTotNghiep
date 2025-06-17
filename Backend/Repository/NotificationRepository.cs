@@ -24,7 +24,6 @@ namespace DoAnTotNghiep.Repository
                 IdNotice = new Guid().ToString(),
                 Content = notificationToAdd.Content,
                 UserName = notificationToAdd.UserName,
-                CreatedAt = DateTimeHelper.GetDateTimeVnNowWithDateTime(),
                 Idcomment = notificationToAdd.Idcomment,
                 TitleMovie = notificationToAdd.TitleMovie
             };

@@ -524,6 +524,11 @@ namespace DoAnTotNghiep.Migrations
                         .HasColumnType("VARCHAR(50)")
                         .HasColumnName("TimeResponse");
 
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("VARCHAR(20)")
+                        .HasColumnName("Type");
+
                     b.Property<string>("UserId")
                         .HasColumnType("text");
 

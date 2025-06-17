@@ -1564,17 +1564,49 @@ namespace DoAnTotNghiep.Repository
             };
         }
 
-        public async Task<List<MovieToShowDTOs>> GetMovieByActor(string actor)
+        public async Task<PaginatedMoviesResultDTO> GetMovieByActor(string actor, int pageNumber, int pageSize)
         {
+            // Kiểm tra tham số đầu vào
+            if (string.IsNullOrEmpty(actor))
+                return new PaginatedMoviesResultDTO
+                {
+                    Movies = new List<MovieToShowDTOs>(),
+                    TotalRecords = 0,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize
+                };
+
+            // Kiểm tra pageNumber và pageSize hợp lệ
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1) pageSize = 2;
+
+            // Đếm tổng số bản ghi bằng LINQ
+            var totalRecords = await _dbContext.Movies
+                .Where(m => m.Block == false)
+                .Join(_dbContext.SubActors,
+                    m => m.IdMovie,
+                    sa => sa.IdMovie,
+                    (m, sa) => new { Movie = m, SubActor = sa })
+                .Join(_dbContext.Actors,
+                    ms => ms.SubActor.IdActor,
+                    a => a.IdActor,
+                    (ms, a) => new { ms.Movie, Actor = a })
+                .Where(ma => ma.Actor.SlugActorName.Contains(actor, StringComparison.OrdinalIgnoreCase) ||
+                            ma.Movie.SlugNameDirector.Contains(actor, StringComparison.OrdinalIgnoreCase))
+                .Select(ma => ma.Movie.IdMovie)
+                .Distinct()
+                .CountAsync();
+
+            // Truy vấn SQL với phân trang
             var sql = @"
                 WITH ActorFiltered AS (
-                     SELECT DISTINCT m.""Id""
-                     FROM ""Movie"" m
-                     LEFT JOIN ""SubActor"" sa ON m.""Id"" = sa.""IdMovie""
-                     LEFT JOIN ""Actor"" a ON sa.""IdActor"" = a.""IdActor""
-                     WHERE a.""SlugActorName"" ILIKE '%' || @actor || '%'
-                            OR m.""SlugNameDirector"" ILIKE '%' || @actor || '%'
-                    )
+                    SELECT DISTINCT m.""Id""
+                    FROM ""Movie"" m
+                    LEFT JOIN ""SubActor"" sa ON m.""Id"" = sa.""IdMovie""
+                    LEFT JOIN ""Actor"" a ON sa.""IdActor"" = a.""IdActor""
+                    WHERE a.""SlugActorName"" ILIKE '%' || @actor || '%'
+                        OR m.""SlugNameDirector"" ILIKE '%' || @actor || '%'
+                )
                 SELECT 
                     m.""Id"", 
                     m.""Title"",  
@@ -1602,21 +1634,40 @@ namespace DoAnTotNghiep.Repository
                 LEFT JOIN ""SubCategories"" sc ON m.""Id"" = sc.""IdMovie""
                 LEFT JOIN ""Category"" c ON sc.""IdCategory"" = c.""IdCategories""
                 LEFT JOIN (
-                            SELECT DISTINCT ON (""IdMovie"") ""IdMovie"", ""Episode"", ""CreatedAt"", ""UrlMovie""
-                            FROM ""LinkMovie""
-                            ORDER BY ""IdMovie"", ""CreatedAt"" DESC
-                        ) lm ON m.""Id"" = lm.""IdMovie""
+                    SELECT DISTINCT ON (""IdMovie"") ""IdMovie"", ""Episode"", ""CreatedAt"", ""UrlMovie""
+                    FROM ""LinkMovie""
+                    ORDER BY ""IdMovie"", ""CreatedAt"" DESC
+                ) lm ON m.""Id"" = lm.""IdMovie""
                 LEFT JOIN ""SubActor"" sa ON m.""Id"" = sa.""IdMovie""
                 LEFT JOIN ""Actor"" a ON sa.""IdActor"" = a.""IdActor""
                 WHERE m.""Id"" IN (SELECT ""Id"" FROM ActorFiltered)         
                 AND m.""Block"" = false
-                GROUP BY m.""Id"", lm.""UrlMovie"", lm.""Episode"", lm.""CreatedAt"";";
+                GROUP BY m.""Id"", lm.""UrlMovie"", lm.""Episode"", lm.""CreatedAt""
+                ORDER BY m.""Id""
+                LIMIT @pageSize OFFSET @offset;";
 
-            return await _dbContext.Database
-        .SqlQueryRaw<MovieToShowDTOs>(sql, new[] { new NpgsqlParameter("@actor", actor) })
-            .ToListAsync();
+            // Tạo danh sách tham số
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@actor", actor),
+                new NpgsqlParameter("@pageSize", pageSize),
+                new NpgsqlParameter("@offset", (pageNumber - 1) * pageSize)
+            };
+
+            // Thực thi truy vấn
+            var movies = await _dbContext.Database
+                .SqlQueryRaw<MovieToShowDTOs>(sql, parameters.ToArray())
+                .ToListAsync();
+
+            // Trả về kết quả phân trang
+            return new PaginatedMoviesResultDTO
+            {
+                Movies = movies,
+                TotalRecords = totalRecords,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
         }
 
-        
     }
 }

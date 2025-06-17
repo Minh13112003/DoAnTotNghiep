@@ -92,7 +92,7 @@ const ListNewestFilm = () => {
             <div className='container'>
                 <div className='row'>
                     <div className="d-flex justify-content-between align-items-center">
-                        <h4 className="ms-2"><b>Danh sách Phim</b></h4>
+                        <h4 className="ms-2"><b>Danh sách Phim mới nhất</b></h4>
                     </div>
                 </div>
                 <div className='row mt-5'>

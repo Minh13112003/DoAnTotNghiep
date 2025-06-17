@@ -32,6 +32,7 @@ namespace DoAnTotNghiep.Repository
             await _databaseContext.AddAsync(linkMovie);
             var Movie = await _databaseContext.Movies.FirstOrDefaultAsync(i => i.IdMovie == linkMovieDTOs.IdMovie);
             ++Movie.NumberOfMovie;
+            if(Movie.Status == "0") Movie.Status = "2";     
             await _databaseContext.SaveChangesAsync();
             return true;
         }

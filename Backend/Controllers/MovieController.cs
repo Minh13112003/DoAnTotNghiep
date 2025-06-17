@@ -244,13 +244,13 @@ namespace DoAnTotNghiep.Controllers
             }
         }
         [HttpGet("GetMovieByActor/{actor}")]
-        public async Task<IActionResult> GetMovieByActor(string actor)
+        public async Task<IActionResult> GetMovieByActor(string actor, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 36)
         {
             try
             {
                 if (!ModelState.IsValid || actor.IsNullOrEmpty()) return BadRequest(new { message = "Đã có lỗi xảy ra" });
                 string actorSlug = SlugHelper.Slugify(actor);
-                var movie = await _services.GetMovieByActor(actorSlug);
+                var movie = await _services.GetMovieByActor(actorSlug, pageNumber, pageSize);
                 if (movie != null) return Ok(movie);
                 return BadRequest(new { message = "Không tìm thấy phim" });
             }catch(Exception ex)

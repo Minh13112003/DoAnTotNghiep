@@ -357,6 +357,21 @@ const MovieManagement = () => {
             nameActors: [...formData.nameActors, '']
         });
     };
+    const removeActorField = (index) => {
+        const updatedActors = [...formData.nameActors];
+        updatedActors.splice(index, 1);
+        setFormData({ ...formData, nameActors: updatedActors });
+        setActorCount(actorCount - 1);
+    }
+    const removeCategoryField = (index) => {
+        // Sao chép mảng nameCategories và xóa phần tử tại index
+        const updatedCategories = [...formData.nameCategories];
+        updatedCategories.splice(index, 1);
+    
+        // Cập nhật formData và categoryCount
+        setFormData({ ...formData, nameCategories: updatedCategories });
+        setCategoryCount(categoryCount - 1);
+    };
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -755,13 +770,21 @@ const MovieManagement = () => {
                                                         label: category.nameCategories,
                                                     }))}
                                                     />
+                                                    <Button
+                                                        variant="outline-danger"
+                                                        size="sm"
+                                                        onClick={() => removeCategoryField(index)}
+                                                        disabled={categoryCount === 1} // Vô hiệu hóa nút xóa nếu chỉ có một ô
+                                                    >
+                                                        Xóa
+                                                    </Button>
                                                 </div>
                                                 ))}
                                                 <Button variant="outline-primary" size="sm" onClick={addCategoryField}>
                                                 Thêm thể loại
                                                 </Button>
                                             </Form.Group>
-                                            </Col>
+                                        </Col>
                                     </Row>
                                     
                                     
@@ -802,6 +825,14 @@ const MovieManagement = () => {
                                                             onChange={(e) => handleActorChange(index, e.target.value)}
                                                             placeholder="Nhập tên diễn viên"
                                                         />
+                                                        <Button
+                                                            variant="outline-danger"
+                                                            size="sm"
+                                                            onClick={() => removeActorField(index)}
+                                                            disabled={actorCount === 1}
+                                                        >
+                                                            Xóa
+                                                        </Button>
                                                     </div>
                                                 ))}
                                                 <Button variant="outline-primary" size="sm" onClick={addActorField}>

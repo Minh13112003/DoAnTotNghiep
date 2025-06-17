@@ -81,8 +81,91 @@ namespace DoAnTotNghiep.Repository
                     c.""Content"" AS ""ContentCommentReported""
                 FROM ""Report"" r
                 LEFT JOIN ""Comment"" c ON r.""IdComment"" = c.""IdComment""
-                WHERE r.""Status"" = 0 OR (r.""Status"" = 1 AND r.""UserNameAdminFix"" = @usernameadminfix);
-            ";
+                WHERE (r.""Status"" = 0 AND r.""Type"" = 'Report Hệ thống')
+                    OR 
+                    (r.""Status"" = 1 AND r.""UserNameAdminFix"" = @usernameadminfix AND r.""Type"" = 'Report Hệ thống');
+                    ";
+            return await _databaseContext.Database
+        .SqlQueryRaw<ReportToShowDTOs>(sql, new[] { new NpgsqlParameter("@usernameadminfix", UserNameAdminFix) })
+            .ToListAsync();
+        }
+        public async Task<List<ReportToShowDTOs>> GetNotificationAdmin(string UserNameAdminFix)
+        {
+
+            var sql = @"
+                SELECT 
+                    r.""IdReport"",
+                    r.""IdMovie"",
+                    r.""IdComment"",
+                    r.""UserNameReporter"",
+                    r.""Content"",
+                    r.""UserNameAdminFix"",
+                    r.""Response"",
+                    r.""TimeReport"",
+                    r.""TimeResponse"",
+                    r.""Status"",
+                    c.""IdUserName"" AS ""NameOfUserReported"",
+                    c.""Content"" AS ""ContentCommentReported""
+                FROM ""Report"" r
+                LEFT JOIN ""Comment"" c ON r.""IdComment"" = c.""IdComment""
+                WHERE (r.""Status"" = 0 AND r.""Type"" = 'Đổi Gmail')
+                    OR 
+                    (r.""Status"" = 1 AND r.""UserNameAdminFix"" = @usernameadminfix AND r.""Type"" = 'Đổi Gmail');
+                    ";
+            return await _databaseContext.Database
+        .SqlQueryRaw<ReportToShowDTOs>(sql, new[] { new NpgsqlParameter("@usernameadminfix", UserNameAdminFix) })
+            .ToListAsync();
+        }
+        public async Task<List<ReportToShowDTOs>> GetReportMovie(string UserNameAdminFix)
+        {
+
+            var sql = @"
+                SELECT 
+                    r.""IdReport"",
+                    r.""IdMovie"",
+                    r.""IdComment"",
+                    r.""UserNameReporter"",
+                    r.""Content"",
+                    r.""UserNameAdminFix"",
+                    r.""Response"",
+                    r.""TimeReport"",
+                    r.""TimeResponse"",
+                    r.""Status"",
+                    c.""IdUserName"" AS ""NameOfUserReported"",
+                    c.""Content"" AS ""ContentCommentReported""
+                FROM ""Report"" r
+                LEFT JOIN ""Comment"" c ON r.""IdComment"" = c.""IdComment""
+                WHERE (r.""Status"" = 0 AND r.""Type"" = 'Report Movie')
+                    OR 
+                    (r.""Status"" = 1 AND r.""UserNameAdminFix"" = @usernameadminfix AND r.""Type"" = 'Report Movie');
+                    ";
+            return await _databaseContext.Database
+        .SqlQueryRaw<ReportToShowDTOs>(sql, new[] { new NpgsqlParameter("@usernameadminfix", UserNameAdminFix) })
+            .ToListAsync();
+        }
+        public async Task<List<ReportToShowDTOs>> GetReportComment(string UserNameAdminFix)
+        {
+
+            var sql = @"
+                SELECT 
+                    r.""IdReport"",
+                    r.""IdMovie"",
+                    r.""IdComment"",
+                    r.""UserNameReporter"",
+                    r.""Content"",
+                    r.""UserNameAdminFix"",
+                    r.""Response"",
+                    r.""TimeReport"",
+                    r.""TimeResponse"",
+                    r.""Status"",
+                    c.""IdUserName"" AS ""NameOfUserReported"",
+                    c.""Content"" AS ""ContentCommentReported""
+                FROM ""Report"" r
+                LEFT JOIN ""Comment"" c ON r.""IdComment"" = c.""IdComment""
+                WHERE (r.""Status"" = 0 AND r.""Type"" = 'Report Comment')
+                    OR 
+                    (r.""Status"" = 1 AND r.""UserNameAdminFix"" = @usernameadminfix AND r.""Type"" = 'Report Comment');
+                    ";
             return await _databaseContext.Database
         .SqlQueryRaw<ReportToShowDTOs>(sql, new[] { new NpgsqlParameter("@usernameadminfix", UserNameAdminFix) })
             .ToListAsync();
@@ -116,15 +199,15 @@ namespace DoAnTotNghiep.Repository
                 var report = await _databaseContext.Reports.FirstOrDefaultAsync(r => r.IdReport == IdReport);
                 if (report != null)
                 {
-                    if(report.Status != 1)
+                    if(report.Status == 0)
                     {
-                        return false;
+                        report.UserNameAdminFix = UserNameAdminFix;
+                        report.Status = 1;
+                        await _databaseContext.SaveChangesAsync();
+                        return true;
                     }
-                    report.UserNameAdminFix = UserNameAdminFix;
-                    report.Status = 1;
+                    
                 }
-                await _databaseContext.SaveChangesAsync();
-                return true;
             }
             return false;
         }
@@ -157,7 +240,8 @@ namespace DoAnTotNghiep.Repository
                     UserNameReporter = UserNameReporter,
                     Content = upReportDTOs.Content,
                     Status = 0,
-                    TimeReport = DateTimeHelper.GetdateTimeVNNow()
+                    TimeReport = DateTimeHelper.GetdateTimeVNNow(),
+                    Type =  "Report Hệ thống"
                 };
 
                 // Nếu có SlugMovie
@@ -169,6 +253,7 @@ namespace DoAnTotNghiep.Repository
                     if (movie != null)
                     {
                         report.IdMovie = movie.IdMovie;
+                        report.Type = "Report Phim";
                     }
                     else
                     {
@@ -187,7 +272,7 @@ namespace DoAnTotNghiep.Repository
                         {
                             throw new InvalidOperationException("Bạn không thể tự báo cáo chính mình.");
                         }
-
+                        report.Type = "Report Comment";
                         report.IdComment = upReportDTOs.IdComment;
                     }
                 }

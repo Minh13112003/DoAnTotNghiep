@@ -57,3 +57,6 @@ export const AddHistory=(param) =>{
 export const GetMovieById = (param) => {
     return apiService.get(`${urls.URL_GetMovieById}/${param}`);
 }
+export const GetMovieByActor = (param, pageNumber, ItemPerSize) => {
+    return apiService.get(`${urls.URL_GetMovieByActor}/${param}?pageNumber=${pageNumber}&pageSize=${ItemPerSize}`);
+}

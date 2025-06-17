@@ -64,7 +64,7 @@ namespace DoAnTotNghiep.Controllers
 
         //Hiển thị danh sách report cho phía admin
         [Authorize(Roles = "Admin")]
-        [HttpGet("GetReportAdmin")]
+        [HttpGet("GetReportSystem")]
         public async Task<IActionResult> GetReportAdmin()
         {
             try
@@ -80,6 +80,69 @@ namespace DoAnTotNghiep.Controllers
                 return BadRequest(new { message = "Lỗi" });
             }
             catch(Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+        [Authorize(Roles = "Admin")]
+        [HttpGet("GetReportComment")]
+        public async Task<IActionResult> GetReportComment()
+        {
+            try
+            {
+                if (!ModelState.IsValid) return BadRequest(ModelState);
+                var username = User.Identity?.Name;
+                if (!string.IsNullOrEmpty(username))
+                {
+                    var result = await _reportServices.GetReportComment(username);
+                    if (result != null) return Ok(result);
+
+                }
+                return BadRequest(new { message = "Lỗi" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+        [Authorize(Roles = "Admin")]
+        [HttpGet("GetReportMovie")]
+        public async Task<IActionResult> GetReportMovie()
+        {
+            try
+            {
+                if (!ModelState.IsValid) return BadRequest(ModelState);
+                var username = User.Identity?.Name;
+                if (!string.IsNullOrEmpty(username))
+                {
+                    var result = await _reportServices.GetReportMovie(username);
+                    if (result != null) return Ok(result);
+
+                }
+                return BadRequest(new { message = "Lỗi" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+        [Authorize(Roles = "Admin")]
+        [HttpGet("GetNotification")]
+        public async Task<IActionResult> GetNotification()
+        {
+            try
+            {
+                if (!ModelState.IsValid) return BadRequest(ModelState);
+                var username = User.Identity?.Name;
+                if (!string.IsNullOrEmpty(username))
+                {
+                    var result = await _reportServices.GetNotificationAdmin(username);
+                    if (result != null) return Ok(result);
+
+                }
+                return BadRequest(new { message = "Lỗi" });
+            }
+            catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
             }

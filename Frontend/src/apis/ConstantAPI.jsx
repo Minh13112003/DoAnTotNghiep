@@ -31,13 +31,21 @@ export const URL_GetMovieByTitle = `${URL_BASE}/movie/GetMovieBySlugTitle`;
 export const URL_ToggleMovie = `${URL_BASE}/movie/ToggleFavoriteMovie`;
 export const URL_AddHistory = `${URL_BASE}/movie/AddHistory`;
 export const URL_UpdateMovie = `${URL_BASE}/movie/update`;
-export const URL_GetMovieById = `${URL_BASE}/movie/GetMovieById`
+export const URL_GetMovieById = `${URL_BASE}/movie/GetMovieById`;
+export const URL_GetMovieByActor = `${URL_BASE}/movie/GetMovieByActor`;
 
 //Report API
 export const URL_Upreport = `${URL_BASE}/report/UpReport`;
 export const URL_GetCommentReport = `${URL_BASE}/report/GetCommentReport`;
 export const URL_ExecuteReport = `${URL_BASE}/report/ExecuteReport`
 export const URL_ResponseCommentReport = `${URL_BASE}/report/ResponseCommentReport`
+export const URL_GetReportComment = `${URL_BASE}/report/GetReportComment`
+export const URL_GetReportMovie = `${URL_BASE}/report/GetReportMovie`
+export const URL_GetReportSystem = `${URL_BASE}/report/GetReportSystem`
+export const URL_ReceiveReport= `${URL_BASE}/report/ReceiveReport`
+export const URL_ResponseReport= `${URL_BASE}/report/ResponseReport`
+export const URL_SelfReport= `${URL_BASE}/report/GetSelfReport`
+
 
 //Comment API
 export const URL_AddComment = `${URL_BASE}/comment/AddComment`;

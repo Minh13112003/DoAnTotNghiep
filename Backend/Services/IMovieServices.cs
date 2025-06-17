@@ -16,7 +16,7 @@ namespace DoAnTotNghiep.Services
         Task<PaginatedMoviesResultDTO> SearchMovie(string? keyword, string role, int pageNumber, int pageSize);
         Task<PaginatedMoviesResultDTO> GetMovieByNation(string slugNation, int pageNumber, int pageSize);
         Task<PaginatedMoviesResultDTO> GetMovieByStatus(string status, int pageNumber, int pageSize);
-        Task<List<MovieToShowDTOs>> GetMovieByActor(string actor);
+        Task<PaginatedMoviesResultDTO> GetMovieByActor(string actor, int pageNumber, int pageSize);
         Task<List<MovieToShowDTOs>> GetMovieById(string id);
         Task<PaginatedMoviesResultDTO> GetFavoriteMoviesBySlugTitlesAsync(List<string> slugTitles, int pageNumber, int pageSize);
         Task<bool> IncreaseMovieView(string titleSlug);

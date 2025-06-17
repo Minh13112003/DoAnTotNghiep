@@ -14,7 +14,6 @@ export const slidebarMenus = [
         icon: <FaList />,
         items: [
             { title: 'Danh sách thể loại', link: '/quan-ly/the-loai/danh-sach' },
-            { title: 'Thêm thể loại', link: '/quan-ly/the-loai/them-moi' },
         ]
     },
     {
@@ -22,7 +21,6 @@ export const slidebarMenus = [
         icon: <FaUsers />,
         items: [
             { title: 'Danh sách người dùng', link: '/quan-ly/tai-khoan/danh-sach' },
-            { title: 'Thêm người dùng', link: '/quan-ly/tai-khoan/them-moi' },
         ]
     },
     {
@@ -30,14 +28,13 @@ export const slidebarMenus = [
         icon: <FaComments />,
         items: [
             { title: 'Danh sách bình luận', link: '/quan-ly/binh-luan' },
-            { title: 'Bình luận bị báo cáo', link: '/quan-ly/binh-luan/bao-cao' },
         ]
     },
     {
-        title: 'Quản lý Góp ý',
+        title: 'Quản lý Báo cáo',
         icon: <FaEnvelope />,
         items: [
-            { title: 'Danh sách góp ý', link: '/quan-ly/gop-y' },
+            { title: 'Danh sách báo cáo', link: '/quan-ly/bao-cao' },
         ]
     }
 ];

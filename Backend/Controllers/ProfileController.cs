@@ -57,33 +57,53 @@ namespace DoAnTotNghiep.Controllers
             var fileUrl = $"{Request.Scheme}://{Request.Host}/Images/Avatars/{fileName}";
             var username = User.Identity?.Name;
             var user = await _userManager.FindByNameAsync(username!);
-            if (!string.IsNullOrEmpty(user?.Image))
+            if (!string.IsNullOrEmpty(user.Image))
             {
-                var oldFileName = Path.GetFileName(new Uri(user.Image).LocalPath);
-                var oldFilePath = Path.Combine(uploadPath, oldFileName);
+                string oldFileName = null;
 
-                if (System.IO.File.Exists(oldFilePath))
+                // Kiểm tra xem movie.BackgroundImage có phải là URI hợp lệ không
+                if (Uri.TryCreate(user.Image, UriKind.Absolute, out var uriResult) && 
+                    (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps))
                 {
-                    System.IO.File.Delete(oldFilePath);
+                    oldFileName = Path.GetFileName(uriResult.LocalPath);
+
+                    // Xóa tệp cũ nếu tồn tại
+                    if (!string.IsNullOrEmpty(oldFileName))
+                    {
+                        var oldFilePath = Path.Combine(uploadPath, oldFileName);
+                        if (System.IO.File.Exists(oldFilePath))
+                        {
+                            try
+                            {
+                                System.IO.File.Delete(oldFilePath);
+                                _logger.LogInformation($"Đã xóa tệp cũ: {oldFilePath}");
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning($"Không thể xóa tệp cũ {oldFilePath}: {ex.Message}");
+                            }
+                        }
+                    }
                 }
+                // Nếu không phải URI hợp lệ, không cần xử lý tệp cũ, chỉ gán fileUrl mới
             }
             user!.Image = fileUrl;
             await _userManager.UpdateAsync(user);
             return Ok(new { fileName, fileUrl });
         }
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpPost("upload-Image")]
         public async Task<IActionResult> UploadImage([FromForm] UploadImageOrBackgroundDTO UploadImage)
         {
             var file = UploadImage.File;
             var NameMovie = UploadImage.NameMovie;
             if (file == null || file.Length == 0)
-                return BadRequest("No file uploaded.");
+                return BadRequest("Không có tệp được tải lên.");
 
             // Kiểm tra loại file ảnh
             var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif" };
             if (!allowedTypes.Contains(file.ContentType))
-                return BadRequest("Only image files (jpg, png, gif) are allowed.");
+                return BadRequest("Chỉ chấp nhận các tệp ảnh (jpg, png, gif).");
 
             // Tạo tên file duy nhất
             var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
@@ -100,35 +120,62 @@ namespace DoAnTotNghiep.Controllers
                 await file.CopyToAsync(stream);
             }
 
-            // Trả về URL file hoặc tên file
+            // Tạo URL cho tệp mới
             var fileUrl = $"{Request.Scheme}://{Request.Host}/Images/ImageMovie/{fileName}";
             var movie = await _database.Movies.FirstOrDefaultAsync(i => i.Title == NameMovie);
-            if (!string.IsNullOrEmpty(movie?.Image))
+            if (movie == null)
+                return NotFound("Không tìm thấy phim.");
+
+            // Xử lý tệp cũ nếu tồn tại
+            if (!string.IsNullOrEmpty(movie.Image))
             {
-                var oldFileName = Path.GetFileName(new Uri(movie.Image).LocalPath);
-                var oldFilePath = Path.Combine(uploadPath, oldFileName);     
-                if (System.IO.File.Exists(oldFilePath))
+                string oldFileName = null;
+
+                // Kiểm tra xem movie.Image có phải là URI hợp lệ không
+                if (Uri.TryCreate(movie.Image, UriKind.Absolute, out var uriResult) && 
+                    (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps))
                 {
-                    System.IO.File.Delete(oldFilePath);
+                    oldFileName = Path.GetFileName(uriResult.LocalPath);
+
+                    // Xóa tệp cũ nếu tồn tại
+                    if (!string.IsNullOrEmpty(oldFileName))
+                    {
+                        var oldFilePath = Path.Combine(uploadPath, oldFileName);
+                        if (System.IO.File.Exists(oldFilePath))
+                        {
+                            try
+                            {
+                                System.IO.File.Delete(oldFilePath);
+                                _logger.LogInformation($"Đã xóa tệp cũ: {oldFilePath}");
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning($"Không thể xóa tệp cũ {oldFilePath}: {ex.Message}");
+                            }
+                        }
+                    }
                 }
+                // Nếu không phải URI hợp lệ, không cần xử lý tệp cũ, chỉ gán fileUrl mới
             }
-            movie!.Image = fileUrl;
+
+            // Gán URL mới cho movie
+            movie.Image = fileUrl;
             await _database.SaveChangesAsync();
-            return Ok(new { fileName, fileUrl});
+            return Ok(new { fileName, fileUrl });
         }
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpPost("upload-Background")]
         public async Task<IActionResult> UploadBackgroundImage([FromForm] UploadImageOrBackgroundDTO UploadImage)
         {
             var file = UploadImage.File;
             var NameMovie = UploadImage.NameMovie;
             if (file == null || file.Length == 0)
-                return BadRequest("No file uploaded.");
+                return BadRequest("Không có tệp được tải lên.");
 
             // Kiểm tra loại file ảnh
             var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif" };
             if (!allowedTypes.Contains(file.ContentType))
-                return BadRequest("Only image files (jpg, png, gif) are allowed.");
+                return BadRequest("Chỉ chấp nhận các tệp ảnh (jpg, png, gif).");
 
             // Tạo tên file duy nhất
             var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
@@ -145,20 +192,46 @@ namespace DoAnTotNghiep.Controllers
                 await file.CopyToAsync(stream);
             }
 
-            // Trả về URL file hoặc tên file
+            // Tạo URL cho tệp mới
             var fileUrl = $"{Request.Scheme}://{Request.Host}/Images/BackgroundImageMovie/{fileName}";
             var movie = await _database.Movies.FirstOrDefaultAsync(i => i.Title == NameMovie);
-            if (!string.IsNullOrEmpty(movie?.BackgroundImage))
-            {
-                var oldFileName = Path.GetFileName(new Uri(movie.Image).LocalPath);
-                var oldFilePath = Path.Combine(uploadPath, oldFileName);
+            if (movie == null)
+                return NotFound("Không tìm thấy phim.");
 
-                if (System.IO.File.Exists(oldFilePath))
+            // Xử lý tệp cũ nếu tồn tại
+            if (!string.IsNullOrEmpty(movie.BackgroundImage))
+            {
+                string oldFileName = null;
+
+                // Kiểm tra xem movie.BackgroundImage có phải là URI hợp lệ không
+                if (Uri.TryCreate(movie.BackgroundImage, UriKind.Absolute, out var uriResult) && 
+                    (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps))
                 {
-                    System.IO.File.Delete(oldFilePath);
+                    oldFileName = Path.GetFileName(uriResult.LocalPath);
+
+                    // Xóa tệp cũ nếu tồn tại
+                    if (!string.IsNullOrEmpty(oldFileName))
+                    {
+                        var oldFilePath = Path.Combine(uploadPath, oldFileName);
+                        if (System.IO.File.Exists(oldFilePath))
+                        {
+                            try
+                            {
+                                System.IO.File.Delete(oldFilePath);
+                                _logger.LogInformation($"Đã xóa tệp cũ: {oldFilePath}");
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning($"Không thể xóa tệp cũ {oldFilePath}: {ex.Message}");
+                            }
+                        }
+                    }
                 }
+                // Nếu không phải URI hợp lệ, không cần xử lý tệp cũ, chỉ gán fileUrl mới
             }
-            movie!.BackgroundImage = fileUrl;
+
+            // Gán URL mới cho movie
+            movie.BackgroundImage = fileUrl;
             await _database.SaveChangesAsync();
             return Ok(new { fileName, fileUrl });
         }
