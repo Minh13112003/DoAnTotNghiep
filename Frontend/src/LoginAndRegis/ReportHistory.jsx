@@ -100,7 +100,7 @@ const ReportHistory = () => {
                 </Button>
             </div>
 
-            <h2 className="text-center mb-4" style={{color: 'white'}}>Lịch sử thanh toán</h2>
+            <h2 className="text-center mb-4" style={{color: 'white'}}>Lịch sử báo cáo</h2>
             
             <div className="table-responsive">
                 <Table className="payment-table">

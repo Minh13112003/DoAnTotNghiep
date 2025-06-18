@@ -98,7 +98,7 @@ const AuthForm = () => {
       return;
     }
     try {
-      await SendOTP(formData.username);
+      await SendOTP(formData.username, 1);
       setMessage({
         type: "success",
         content: "Mã OTP đã được gửi thành công!"
@@ -336,36 +336,6 @@ const AuthForm = () => {
                       </div>
                     </div>
 
-                    {isLogin && (
-                      <div className="mb-3 row align-items-center">
-                        <label className="col-sm-3 col-form-label">OTP:</label>
-                        <div className="col-sm-6">
-                          <input
-                            type="text"
-                            className={`form-control ${errors.otp ? 'is-invalid' : ''}`}
-                            name="otp"
-                            value={formData.otp}
-                            onChange={handleChange}
-                            placeholder="Nhập mã OTP"
-                          />
-                          {errors.otp && (
-                            <div className="invalid-feedback">{errors.otp}</div>
-                          )}
-                        </div>
-                        <div className="col-sm-3">
-                          <button
-                            type="button"
-                            className="btn btn-secondary"
-                            onClick={handleSendOTP}
-                            disabled={!canResendOTP}
-                          >
-                           {countdown > 0 
-                          ? `Gửi lại (${Math.floor(countdown / 60)}:${(countdown % 60).toString().padStart(2, '0')})` 
-                          : "Gửi OTP"}
-                          </button>
-                        </div>
-                      </div>
-                    )}
 
                     <div className="d-grid gap-2">
                       <button type="submit" className="btn btn-primary">

@@ -30,6 +30,7 @@ import PaymentHistory from './Payment/PaymentHistory';
 import CommentManagement from './Admin/CommentManagement';
 import AccountManagement from './Admin/AccountManagement';
 import ReportManagement from './Admin/ReportManagement';
+import ReportHistory from './LoginAndRegis/ReportHistory';
 
 function App() {
   return (
@@ -66,6 +67,7 @@ function App() {
           <Route path="/quan-ly/binh-luan" element={<CommentManagement />} />
           <Route path="/quan-ly/tai-khoan/danh-sach" element={<AccountManagement />} />
           <Route path="/quan-ly/bao-cao" element={<ReportManagement />} />
+          <Route path="/lich-su-bao-cao" element={<ReportHistory/>} />
         </Routes>
       </Router>
     </DataProvider>

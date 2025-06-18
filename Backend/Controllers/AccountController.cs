@@ -48,7 +48,7 @@ namespace DoAnTotNghiep.Controllers
                 var result = await _signInManager.CheckPasswordSignInAsync(user, loginDTO.Password, false);
 
                 if (!result.Succeeded) return Unauthorized(new { message = "UserName or PassWord is incorrect" });
-               /* if (user.OTP == null || user.OTP != loginDTO.OTP)
+                /*if (user.OTP == null || user.OTP != loginDTO.OTP)
                 {
                     return Unauthorized(new { message = "Sai hoặc không tìm thấy OTP" });
                 }
@@ -106,7 +106,6 @@ namespace DoAnTotNghiep.Controllers
                     if (roleResult.Succeeded)
                     {
                         
-
                         return Ok(new UserToken
                         {
                             Email = appUser.Email,
@@ -492,6 +491,7 @@ namespace DoAnTotNghiep.Controllers
             if (user.VerificationCode != userDTO.VerfiCode) return BadRequest(new { message = "Sai mã xác thực" });
 
         }*/
+        // Muốn tk User tự đổi hay để admin đổi giùm hắn ?
 
     }
 }
