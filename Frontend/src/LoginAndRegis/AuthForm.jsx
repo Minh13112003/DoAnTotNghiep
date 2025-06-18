@@ -10,7 +10,7 @@ import Cookies from 'js-cookie';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './AuthForm.css';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaCheck, FaTimes } from 'react-icons/fa';
 import { jwtDecode } from 'jwt-decode';
 
 const AuthForm = () => {
@@ -32,6 +32,13 @@ const AuthForm = () => {
   const [canResendOTP, setCanResendOTP] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [verfiCode, setVerfiCode] = useState("");
+  const [passwordStrength, setPasswordStrength] = useState({
+    length: false,
+    uppercase: false,
+    lowercase: false,
+    number: false,
+    special: false
+  });
 
   useEffect(() => {
     Cookies.remove('accessToken');
@@ -40,28 +47,55 @@ const AuthForm = () => {
     localStorage.removeItem('userData');
   }, []);
 
+  // Hàm kiểm tra độ mạnh của mật khẩu
+  const checkPasswordStrength = (password) => {
+    const strength = {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /\d/.test(password),
+      special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+    };
+    setPasswordStrength(strength);
+    return strength;
+  };
+
+  // Hàm validate mật khẩu mạnh
+  const validateStrongPassword = (password) => {
+    const strength = checkPasswordStrength(password);
+    return Object.values(strength).every(Boolean);
+  };
+
   const validateForm = () => {
     const newErrors = {};
+    
     if (!formData.username.trim()) {
       newErrors.username = "Vui lòng nhập tên đăng nhập";
     }
+    
     if (!formData.password.trim()) {
       newErrors.password = "Vui lòng nhập mật khẩu";
-    } else if (formData.password.length < 6) {
+    } else if (!isLogin && !validateStrongPassword(formData.password)) {
+      newErrors.password = "Mật khẩu không đủ mạnh. Vui lòng kiểm tra các yêu cầu bên dưới.";
+    } else if (isLogin && formData.password.length < 6) {
+      // Cho đăng nhập, chỉ cần tối thiểu 6 ký tự (để tương thích với tài khoản cũ)
       newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự";
     }
+    
     if (!isLogin) {
       if (!formData.email.trim()) {
         newErrors.email = "Vui lòng nhập email";
       } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
         newErrors.email = "Email không hợp lệ";
       }
+      
       if (!formData.phonenumber.trim()) {
         newErrors.phoneNumber = "Vui lòng nhập số điện thoại";
       } else if (!/^\d{10,11}$/.test(formData.phonenumber)) {
         newErrors.phoneNumber = "Số điện thoại không hợp lệ";
       }
     }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -69,6 +103,12 @@ const AuthForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    
+    // Kiểm tra độ mạnh mật khẩu khi người dùng nhập
+    if (name === 'password' && !isLogin) {
+      checkPasswordStrength(value);
+    }
+    
     if (errors[name]) {
       setErrors({ ...errors, [name]: "" });
     }
@@ -214,7 +254,43 @@ const AuthForm = () => {
       otp: ""
     });
     setErrors({});
+    setPasswordStrength({
+      length: false,
+      uppercase: false,
+      lowercase: false,
+      number: false,
+      special: false
+    });
   };
+
+  // Component hiển thị yêu cầu mật khẩu
+  const PasswordRequirements = () => (
+    <div className="mt-2">
+      <small className="text-muted d-block mb-1">Mật khẩu phải có:</small>
+      <div className="password-requirements">
+        <div className={`requirement-item ${passwordStrength.length ? 'text-success' : 'text-danger'}`}>
+          {passwordStrength.length ? <FaCheck /> : <FaTimes />}
+          <span className="ms-1">Ít nhất 8 ký tự</span>
+        </div>
+        <div className={`requirement-item ${passwordStrength.uppercase ? 'text-success' : 'text-danger'}`}>
+          {passwordStrength.uppercase ? <FaCheck /> : <FaTimes />}
+          <span className="ms-1">Ít nhất 1 chữ hoa (A-Z)</span>
+        </div>
+        <div className={`requirement-item ${passwordStrength.lowercase ? 'text-success' : 'text-danger'}`}>
+          {passwordStrength.lowercase ? <FaCheck /> : <FaTimes />}
+          <span className="ms-1">Ít nhất 1 chữ thường (a-z)</span>
+        </div>
+        <div className={`requirement-item ${passwordStrength.number ? 'text-success' : 'text-danger'}`}>
+          {passwordStrength.number ? <FaCheck /> : <FaTimes />}
+          <span className="ms-1">Ít nhất 1 số (0-9)</span>
+        </div>
+        <div className={`requirement-item ${passwordStrength.special ? 'text-success' : 'text-danger'}`}>
+          {passwordStrength.special ? <FaCheck /> : <FaTimes />}
+          <span className="ms-1">Ít nhất 1 ký tự đặc biệt (!@#$%^&*...)</span>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ 
@@ -315,27 +391,29 @@ const AuthForm = () => {
 
                     <div className="mb-4 row align-items-center">
                       <label className="col-sm-3 col-form-label">Password:</label>
-                      <div className="col-sm-9 position-relative">
-                        <input
-                          type={showPassword ? "text" : "password"}
-                          className={`form-control ${errors.password ? 'is-invalid' : ''}`}
-                          name="password"
-                          value={formData.password}
-                          onChange={handleChange}
-                        />
-                        <span 
-                          className="position-absolute end-0 top-50 translate-middle-y pe-3"
-                          style={{ cursor: 'pointer' }}
-                          onClick={togglePasswordVisibility}
-                        >
-                          {showPassword ? <FaEyeSlash /> : <FaEye />}
-                        </span>
-                        {errors.password && (
-                          <div className="invalid-feedback">{errors.password}</div>
-                        )}
+                      <div className="col-sm-9">
+                        <div className="position-relative">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                          />
+                          <span 
+                            className="position-absolute end-0 top-50 translate-middle-y pe-3"
+                            style={{ cursor: 'pointer' }}
+                            onClick={togglePasswordVisibility}
+                          >
+                            {showPassword ? <FaEyeSlash /> : <FaEye />}
+                          </span>
+                          {errors.password && (
+                            <div className="invalid-feedback">{errors.password}</div>
+                          )}
+                        </div>
+                        {!isLogin && <PasswordRequirements />}
                       </div>
                     </div>
-
 
                     <div className="d-grid gap-2">
                       <button type="submit" className="btn btn-primary">
@@ -368,6 +446,13 @@ const AuthForm = () => {
                       setErrors({});
                       setMessage({ type: "", content: "" });
                       setVerfiCode('');
+                      setPasswordStrength({
+                        length: false,
+                        uppercase: false,
+                        lowercase: false,
+                        number: false,
+                        special: false
+                      });
                     }}
                   >
                     {isLogin ? "Đăng ký ngay" : "Đăng nhập"}

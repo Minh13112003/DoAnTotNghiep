@@ -358,23 +358,53 @@ const DetailsMovie = () => {
                                         </div>
                                     </Col>
                                     <Col sm={6} md={4}>
-                                        <div className="d-flex align-items-center">
-                                            <FaUserTie className="text-warning me-2" />
-                                            <span>{movie.nameDirector}</span>
-                                        </div>
-                                    </Col>
+    <div className="d-flex align-items-center">
+        <FaUserTie className="text-warning me-2" />
+        <Link 
+            to={`/dao-dien/${encodeURIComponent(movie.nameDirector)}`}
+            className="text-decoration-none text-primary"
+            style={{ cursor: 'pointer' }}
+        >
+            {movie.nameDirector}
+        </Link>
+    </div>
+</Col>
                                 </Row>
                                 <Row>
-                                    <Col sm={12} md={4}>
-                                        <div className="d-flex align-items-center">
-                                            <FaTheaterMasks className="text-warning me-2" />
-                                            <span>{Array.isArray(movie.nameActors)
-                                                ? movie.nameActors.join(', ')
-                                                : typeof movie.nameActors === 'string'
-                                                ? movie.nameActors
-                                                : 'Không rõ'}</span>
-                                        </div>
-                                    </Col>
+                                <Col sm={12} md={4}>
+    <div className="d-flex align-items-center">
+        <FaTheaterMasks className="text-warning me-2" />
+        <span>
+            {Array.isArray(movie.nameActors)
+                ? movie.nameActors.map((actor, index) => (
+                    <span key={index}>
+                        <Link 
+                            to={`/dien-vien/${encodeURIComponent(actor.trim())}`}
+                            className="text-decoration-none text-primary"
+                            style={{ cursor: 'pointer' }}
+                        >
+                            {actor.trim()}
+                        </Link>
+                        {index < movie.nameActors.length - 1 && ', '}
+                    </span>
+                ))
+                : typeof movie.nameActors === 'string'
+                ? movie.nameActors.split(', ').map((actor, index, array) => (
+                    <span key={index}>
+                        <Link 
+                            to={`/dien-vien/${encodeURIComponent(actor.trim())}`}
+                            className="text-decoration-none text-primary"
+                            style={{ cursor: 'pointer' }}
+                        >
+                            {actor.trim()}
+                        </Link>
+                        {index < array.length - 1 && ', '}
+                    </span>
+                ))
+                : 'Không rõ'}
+        </span>
+    </div>
+</Col>
                                     <Col sm={6} md={4}>
                                         <div className="d-flex align-items-center">
                                             <FaStar className="text-warning me-2" />

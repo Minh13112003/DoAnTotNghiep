@@ -2,23 +2,26 @@ import React, { useContext, useEffect, useState } from 'react';
 import './ListFilm.css';
 import { DataContext } from '../ContextAPI/ContextNavbar';
 import Navbar from '../Dashboard/Navbar';
-import { useParams, useLocation, data, Link, useNavigate } from 'react-router-dom';
+import { useParams, useLocation, Link, useNavigate } from 'react-router-dom';
 import Footer from '../Dashboard/Footer';
 import slugify from '../Helper/Slugify';
 import { GetMovieByActor } from '../apis/movieAPI';
 import { Pagination } from 'react-bootstrap';
+import { toast } from 'react-toastify';
+import Cookies from 'js-cookie';
 
 const ListActorFilm = () => {
     const { categories, movieTypes, nations, statuses, statusMap } = useContext(DataContext);
     const [movies, setMovies] = useState([]);
-    const {slugActor} = useParams();
+    const { slugActor } = useParams();
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(36);
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const [currentMovies, setCurrentMovies] = useState(null);
     const [totalPages, setTotalPages] = useState(0);
+    const [actorName, setActorName] = useState('');
     const navigate = useNavigate();
+    const location = useLocation();
+
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
         const params = new URLSearchParams(location.search);
@@ -43,49 +46,62 @@ const ListActorFilm = () => {
         }
         return items;
     };
-    const fetchMovies = async (page) => {   
 
+    const fetchMovies = async (page) => {   
         try {
-            // Lấy token từ localStorage
-            // const response = await axios.get('http://localhost:5285/api/movie/FavoriteMovies', {
-            //     headers: {
-            //         'Authorization': `Bearer ${token}`
-            //     }
-            // });
-            const response = await GetMovieByActor(slugActor, page, itemsPerPage);
-            console.log(response.data);
+            let decodedActorName = decodeURIComponent(slugActor);
+        
+        // Sanitize tên diễn viên
+        decodedActorName = decodedActorName
+            .trim()
+            .replace(/[<>'"]/g, '') // Loại bỏ ký tự đặc biệt
+            .replace(/\s+/g, ' '); // Chuẩn hóa khoảng trắng
+        
+        if (!decodedActorName || decodedActorName.length < 2) {
+            throw new Error('Tên diễn viên không hợp lệ');
+        }
+        
+        setActorName(decodedActorName);
+        
+        const response = await GetMovieByActor(decodedActorName, page, itemsPerPage);
+            
+            if (!response.data || !response.data.movies) {
+                throw new Error('Dữ liệu trả về không hợp lệ');
+            }
+            
             setMovies(response.data);
-            // setCurrentMovies(response.data.movies?.slice(indexOfFirstItem, indexOfLastItem));
             setCurrentMovies(response.data.movies);
             setTotalPages(Math.ceil(response.data.totalRecords / itemsPerPage));
-            if (response.data.movies?.length === 0) {
-                navigate("/*");
+            
+            if (response.data.movies.length === 0) {
+                toast.warning(`Không tìm thấy phim nào của ${location.pathname.includes('/dien-vien/') ? 'diễn viên' : 'đạo diễn'}: ${decodedActorName}`);
+                // Không navigate về 404, để user thấy trang trống
             }
         } catch (error) {
-            console.error('Error fetching favorite movies:', error);
-            if (error.response?.status === 401) {
-                toast.error('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại');
-                Cookies.remove('accessToken');
-                Cookies.remove('refreshToken');
-                Cookies.remove('username');
-                localStorage.removeItem('userData');
-                navigate('/tai-khoan/auth');
+            console.error('Error fetching movies by actor:', error);
+            
+            if (error.response?.status === 404) {
+                toast.error('Không tìm thấy thông tin diễn viên/đạo diễn');
+            } else if (error.response?.status === 500) {
+                toast.error('Lỗi server, vui lòng thử lại sau');
             } else {
-                toast.error('Không thể tải danh sách phim yêu thích');
+                toast.error(error.message || 'Không thể tải danh sách phim');
             }
+            
+            navigate("/*");
         }
     };
+    
+    
+
     useEffect(() => {
-        
         const params = new URLSearchParams(location.search);
         let page = params.get("page");
-        setCurrentPage(parseInt(page));
-        console.log(">>>", page);
+        setCurrentPage(parseInt(page) || 1);
         let test = page ? page : 1;
-        console.log("test:",test);
         window.scrollTo({ top: 0, behavior: 'smooth' });
         fetchMovies(test);
-    }, [navigate]);
+    }, [slugActor, location.search]);
    
     return (
         <div>
@@ -93,7 +109,9 @@ const ListActorFilm = () => {
             <div className='container'>
                 <div className='row'>
                     <div className="d-flex justify-content-between align-items-center">
-                        <h4 className="ms-2"><b>Danh sách Phim có diễn viên/đạo diễn </b></h4>
+                        <h4 className="ms-2">
+                            <b>Danh sách Phim có {location.pathname.includes('/dien-vien/') ? 'diễn viên' : 'đạo diễn'}: {actorName}</b>
+                        </h4>
                     </div>
                 </div>
                 <div className='row mt-5'>
@@ -118,30 +136,33 @@ const ListActorFilm = () => {
                         </div>
                     ))}
                 </div>
-                <div className="d-flex justify-content-center mt-4">
-                                <Pagination>
-                                    <Pagination.First 
-                                        onClick={() => handlePageChange(1)}
-                                        disabled={currentPage === 1}
-                                    />
-                                    <Pagination.Prev 
-                                        onClick={() => handlePageChange(currentPage - 1)}
-                                        disabled={currentPage === 1}
-                                    />
-                                    {renderPagination()}
-                                    <Pagination.Next 
-                                        onClick={() => handlePageChange(currentPage + 1)}
-                                        disabled={currentPage === totalPages}
-                                    />
-                                    <Pagination.Last 
-                                        onClick={() => handlePageChange(totalPages)}
-                                        disabled={currentPage === totalPages}
-                                    />
-                                </Pagination>
-                    </div> 
+                {totalPages > 1 && (
+                    <div className="d-flex justify-content-center mt-4">
+                        <Pagination>
+                            <Pagination.First 
+                                onClick={() => handlePageChange(1)}
+                                disabled={currentPage === 1}
+                            />
+                            <Pagination.Prev 
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                            />
+                            {renderPagination()}
+                            <Pagination.Next 
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                            />
+                            <Pagination.Last 
+                                onClick={() => handlePageChange(totalPages)}
+                                disabled={currentPage === totalPages}
+                            />
+                        </Pagination>
+                    </div>
+                )}
             </div>
             <Footer/>
         </div>
     )
 }
+
 export default ListActorFilm;

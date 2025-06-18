@@ -31,6 +31,7 @@ import CommentManagement from './Admin/CommentManagement';
 import AccountManagement from './Admin/AccountManagement';
 import ReportManagement from './Admin/ReportManagement';
 import ReportHistory from './LoginAndRegis/ReportHistory';
+import ListActorFilm from './ListMovie/ListActorFilm';
 
 function App() {
   return (
@@ -68,6 +69,9 @@ function App() {
           <Route path="/quan-ly/tai-khoan/danh-sach" element={<AccountManagement />} />
           <Route path="/quan-ly/bao-cao" element={<ReportManagement />} />
           <Route path="/lich-su-bao-cao" element={<ReportHistory/>} />
+          {/* Thêm route mới cho diễn viên và đạo diễn */}
+          <Route path='/dien-vien/:slugActor' element={<ListActorFilm/>}/>
+          <Route path='/dao-dien/:slugActor' element={<ListActorFilm/>}/>
         </Routes>
       </Router>
     </DataProvider>

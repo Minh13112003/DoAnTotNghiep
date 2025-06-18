@@ -5,3 +5,26 @@
 .position-absolute.end-0 {
   right: 10px;
 }
+
+.password-requirements {
+  font-size: 0.875rem;
+}
+
+.requirement-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.requirement-item svg {
+  width: 12px;
+  height: 12px;
+}
+
+.text-success {
+  color: #28a745 !important;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+}

@@ -1,8 +1,10 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Modal, Button, Form, Spinner } from 'react-bootstrap';
 import slugify from '../Helper/Slugify';
 import { useData } from '../ContextAPI/ContextNavbar';
+import { UpReport } from '../apis/reportAPI'; // Import hàm UpReport
 import './Navbar.css';
 import Cookies from 'js-cookie';
 import { FaCrown } from 'react-icons/fa';
@@ -30,6 +32,11 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
     const [userName, setUserName] = useState();
     const avatar_img = Cookies.get("avatar");
     const image = avatar_img !== 'undefined' ? avatar_img : avatar_default;
+
+    // States cho modal báo cáo
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [feedbackContent, setFeedbackContent] = useState('');
+    const [feedbackLoading, setFeedbackLoading] = useState(false);
 
     useEffect(() => {
         const token = Cookies.get('accessToken');
@@ -87,6 +94,36 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
         if (e.key === 'Enter' && keyword.trim()) {
             handleSearch();
         }
+    };
+
+    // Hàm xử lý gửi báo cáo
+    const handleFeedbackSubmit = async () => {
+        if (!feedbackContent.trim()) {
+            alert('Vui lòng nhập nội dung báo cáo');
+            return;
+        }
+
+        setFeedbackLoading(true);
+        try {
+            const payload = {
+                content: feedbackContent.trim()
+            };
+            
+            await UpReport(payload);
+            alert('Gửi báo cáo thành công!');
+            setFeedbackContent('');
+            setShowFeedbackModal(false);
+        } catch (error) {
+            console.error('Lỗi khi gửi báo cáo:', error);
+            alert('Có lỗi xảy ra khi gửi báo cáo. Vui lòng thử lại!');
+        } finally {
+            setFeedbackLoading(false);
+        }
+    };
+
+    // Hàm mở modal báo cáo
+    const handleOpenFeedbackModal = () => {
+        setShowFeedbackModal(true);
     };
 
     const UserMenu = () => (
@@ -155,9 +192,10 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
                             <li className={`nav-item dropdown ${dropdownOpen.categories ? "show" : ""}`}
                                 onMouseEnter={() => handleMouseEnter("categories")}
                                 onMouseLeave={() => handleMouseLeave("categories")}>
-                                <a className="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded={dropdownOpen.categories}>
+                                    {userRole !== 'Admin' && (<a className="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded={dropdownOpen.categories}>
                                     Thể loại
-                                </a>
+                                </a>)}
+                                
                                 <ul className={`dropdown-menu ${dropdownOpen.categories ? "show" : ""}`}>
                                     {categories.length > 0 ? (
                                         categories.map(category => (
@@ -174,9 +212,10 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
                             <li className={`nav-item dropdown ${dropdownOpen.movieTypes ? "show" : ""}`}
                                 onMouseEnter={() => handleMouseEnter("movieTypes")}
                                 onMouseLeave={() => handleMouseLeave("movieTypes")}>
-                                <a className="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded={dropdownOpen.movieTypes}>
+                                    {userRole !== 'Admin' && (<a className="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded={dropdownOpen.movieTypes}>
                                     Loại phim
-                                </a>
+                                </a>)}
+                                
                                 <ul className={`dropdown-menu ${dropdownOpen.movieTypes ? "show" : ""}`}>
                                     {movieTypes.length > 0 ? (
                                         movieTypes.map((type, index) => (
@@ -193,9 +232,10 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
                             <li className={`nav-item dropdown ${dropdownOpen.nations ? "show" : ""}`}
                                 onMouseEnter={() => handleMouseEnter("nations")}
                                 onMouseLeave={() => handleMouseLeave("nations")}>
-                                <a className="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded={dropdownOpen.nations}>
+                                    {userRole !== 'Admin' && (<a className="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded={dropdownOpen.nations}>
                                     Quốc gia
-                                </a>
+                                </a>)}
+                                
                                 <ul className={`dropdown-menu ${dropdownOpen.nations ? "show" : ""}`}>
                                     {nations.length > 0 ? (
                                         nations.map((nation, index) => (
@@ -212,9 +252,10 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
                             <li className={`nav-item dropdown ${dropdownOpen.statuses ? "show" : ""}`}
                                 onMouseEnter={() => handleMouseEnter("statuses")}
                                 onMouseLeave={() => handleMouseLeave("statuses")}>
-                                <a className="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded={dropdownOpen.statuses}>
+                                    {userRole !== 'Admin' && (<a className="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded={dropdownOpen.statuses}>
                                     Trạng thái phim
-                                </a>
+                                </a>)}
+                                
                                 <ul className={`dropdown-menu ${dropdownOpen.statuses ? "show" : ""}`}>
                                     {statuses.length > 0 ? (
                                         statuses.map(status => (
@@ -228,7 +269,7 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
                                 </ul>
                             </li>
 
-                            {isLoggedIn && (
+                            {isLoggedIn && userRole !== 'Admin' && (
                                 <li className="nav-item">
                                     <Link 
                                         to="/yeu-thich" 
@@ -238,7 +279,7 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
                                     </Link>
                                 </li>
                             )}
-                            {isLoggedIn && (
+                            {isLoggedIn && userRole !== 'Admin' && (
                                 <li className="nav-item">
                                     <Link 
                                         to="/lich-su-xem" 
@@ -248,7 +289,7 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
                                     </Link>
                                 </li>
                             )}
-                            {isLoggedIn && (
+                            {isLoggedIn && userRole !== 'Admin' && (
                                 <li className="nav-item">
                                     <Link 
                                         to="/thanh-toan" 
@@ -259,6 +300,26 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
                                     </Link>
                                 </li>
                             )}
+
+{isLoggedIn && userRole !== 'Admin' && (
+    <li className="nav-item">
+        <button 
+            className="nav-link"
+            onClick={handleOpenFeedbackModal}
+            style={{ 
+                border: 'none', 
+                background: 'none', 
+                color: 'rgba(255,255,255,.75)',
+                padding: '0.5rem 1rem',
+                display: 'block',
+                textDecoration: 'none'
+            }}
+        >
+            Báo cáo
+        </button>
+    </li>
+)}
+
 
                             {isLoggedIn && userRole === 'Admin' && (
                                 <li className={`nav-item dropdown ${dropdownOpen.admin ? "show" : ""}`}
@@ -420,7 +481,47 @@ const Navbar = ({ categories, movieTypes, nations, statuses, statusMap }) => {
                         </form>
                     </div>
                 </div>
-            </nav> 
+            </nav>
+
+            {/* Modal Báo cáo */}
+            <Modal show={showFeedbackModal} onHide={() => setShowFeedbackModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Góp ý/Báo cáo</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Nội dung góp ý/báo cáo</Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                rows={4}
+                                value={feedbackContent}
+                                onChange={(e) => setFeedbackContent(e.target.value)}
+                                placeholder="Nhập nội dung góp ý hoặc báo cáo của bạn..."
+                            />
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowFeedbackModal(false)}>
+                        Hủy
+                    </Button>
+                    <Button 
+                        variant="primary" 
+                        onClick={handleFeedbackSubmit}
+                        disabled={feedbackLoading}
+                    >
+                        {feedbackLoading ? (
+                            <>
+                                <Spinner animation="border" size="sm" className="me-2" />
+                                Đang gửi...
+                            </>
+                        ) : (
+                            'Gửi'
+                        )}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 };
